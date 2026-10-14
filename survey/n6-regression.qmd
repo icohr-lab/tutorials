@@ -227,4 +227,4 @@ And in the methods: the survey-weighted logistic regression, the software (R wit
 
 ## Next
 
-**N7: Your Own Project** is coming soon: organizing a project, NCHS's rules for when an estimate is too unreliable to publish, and writing up your methods.
+Continue with [N7: Your Own Project](n7-project.qmd): organizing a project, NCHS's rules for when an estimate is too unreliable to publish, and writing up your methods.

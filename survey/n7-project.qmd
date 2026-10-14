@@ -1,0 +1,257 @@
+---
+title: "N7 · Your Own Project"
+subtitle: "R for Survey Data, lesson 7 of 7 · about 45 minutes"
+---
+
+```{r}
+#| include: false
+# Build `analysis` exactly as the starter project's prepare.R does, with paths for this website
+prep <- readLines("starter/nhis-project/prepare.R")
+prep <- sub("data/nhis2025_adult.csv", "../data/nhis/nhis2025_adult.csv", prep, fixed = TRUE)
+prep <- prep[!grepl("^saveRDS", prep)]
+suppressMessages(eval(parse(text = prep)))
+options(pillar.sigfig = 4, width = 120)
+```
+
+**In this lesson you will learn to:**
+
+- Organize a survey analysis project so it can be rerun from start to finish
+- Build a "Table 1" of weighted characteristics
+- Apply NCHS's rules for when an estimate is too unreliable to publish
+- Write the methods section for an NHIS analysis
+
+**Before this lesson:** [N6: Tests and Regression](n6-regression.qmd). Work in `n7.R` in your starter project.
+
+## 1. Setup
+
+This lesson uses a helper file, `nchs_reliability.R`. If your starter project does not have it (it was added after the project was first released), [download the starter project](nhis-project.zip) again and copy `nchs_reliability.R` into your project folder.
+
+```{r}
+#| message: false
+library(tidyverse)
+library(srvyr)
+```
+
+```{r}
+#| eval: false
+analysis <- readRDS("data/nhis_analysis.rds")
+source("nchs_reliability.R")
+```
+
+```{r}
+#| include: false
+source("starter/nhis-project/nchs_reliability.R")
+```
+
+```{r}
+nhis_design <- analysis %>%
+  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)
+
+survivors <- nhis_design %>% filter(survivor == 1)
+```
+
+`source()` runs another script, here one that defines a function you will use in section 4.
+
+## 2. Organizing a project
+
+The starter project has served as a small version of a real analysis. For your own project, use the same structure, and a little more of it:
+
+```
+my-project/
+├── my-project.Rproj
+├── README.txt            what the project is, and the order to run the scripts
+├── data/
+│   ├── raw/              files exactly as downloaded; never edited
+│   └── derived/          files your scripts create (such as analysis.rds)
+├── 01_prepare.R          raw data -> analysis file
+├── 02_describe.R         Table 1 and descriptive estimates
+├── 03_models.R           tests and regression
+└── output/               tables and figures your scripts save
+```
+
+Three habits matter more than the exact layout:
+
+- **Never edit raw data by hand.** Every change is made by code, so it can be checked and repeated.
+- **Number the scripts in the order they run.** Each one starts with its own `library()` and `readRDS()` lines, as yours have since N3.
+- **Pass the fresh-start test often** (N3): Session > Restart R, then run the scripts in order. If they run, anyone can reproduce your results, including you in six months.
+
+## 3. Table 1: who are the survivors?
+
+Most papers begin with a table describing the study population. For survey data, each row shows the **unweighted number** of people in the sample and the **weighted percent** in the population.
+
+`survey_prop()` estimates the percent of the population in each category of a `group_by()` variable.
+
+```{r}
+survivors %>%
+  filter(!is.na(poverty)) %>%
+  group_by(poverty) %>%
+  summarize(
+    n = unweighted(n()),
+    percent = survey_prop(vartype = "ci", proportion = TRUE)
+  ) %>%
+  mutate(across(starts_with("percent"), ~ 100 * .x))
+```
+
+Read it as: 206 survivors in the sample had family income below the poverty line, and they represent 7.6% of U.S. adult cancer survivors (95% CI 6.3% to 9.0%). `proportion = TRUE` gives confidence intervals designed for proportions, which stay between 0% and 100%.
+
+::: {.callout-note}
+## Your turn 1
+Make the same table for `age_group` and for `sex`.
+
+*Expected result: age 18-44 9.2%, 45-64 29.7%, 65+ 61.1%; female 57.5%, male 42.5%.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+survivors %>%
+  filter(!is.na(age_group)) %>%
+  group_by(age_group) %>%
+  summarize(n = unweighted(n()), percent = survey_prop(vartype = "ci", proportion = TRUE)) %>%
+  mutate(across(starts_with("percent"), ~ 100 * .x))
+
+survivors %>%
+  filter(!is.na(sex)) %>%
+  group_by(sex) %>%
+  summarize(n = unweighted(n()), percent = survey_prop(vartype = "ci", proportion = TRUE)) %>%
+  mutate(across(starts_with("percent"), ~ 100 * .x))
+```
+
+Most U.S. adult cancer survivors are 65 or older, which is why age belongs in every model of survivors' health.
+:::
+
+A finished Table 1 stacks these blocks, one per variable, usually formatted as "n (weighted %)". Copying numbers into a word processor by hand invites errors; when you are ready, packages such as **gtsummary** can build the whole table from the design object.
+
+## 4. When is an estimate reliable enough to publish?
+
+In N5, the estimate for uninsured survivors had a confidence interval from about 12% to 46%. You could see it was useless, but "you could see it" is not a rule. NCHS has formal rules, the [NCHS Data Presentation Standards for Proportions](https://www.cdc.gov/nchs/data/series/sr_02/sr02_175.pdf). In short, for an estimated percent:
+
+| Check | Result |
+|---|---|
+| Sample size **or** effective sample size below 30 | Suppress |
+| 95% CI (Korn-Graubard method) 30 percentage points wide or more | Suppress |
+| CI between 5 and 30 points wide, and **relative** width above 130% | Suppress |
+| Estimate of exactly 0% or 100%, or fewer than 8 degrees of freedom | Flag for review |
+| Otherwise | Present |
+
+Two new terms:
+
+- **Effective sample size**: the sample size divided by the **design effect**. Clustering makes a survey sample less informative than a simple random sample of the same size; the design effect measures by how much. For estimating fair or poor health, the 206 survivors below the poverty line carry about as much information as 132 people sampled completely at random. (The design effect differs from one estimate to another, so it is calculated for each.)
+- **Relative CI width**: the width of the interval divided by the estimate. A 10-point-wide interval is fine around 50%, but not around 5%.
+
+`check_proportion()` from `nchs_reliability.R` applies all of these rules. Give it a design (already filtered to your subgroup), a 0/1 variable, and optionally a grouping variable.
+
+```{r}
+check_proportion(survivors, fair_poor, poverty)
+```
+
+All four estimates from N5 pass. (The confidence limits differ slightly from N5's because the standards require the Korn-Graubard method.)
+
+::: {.callout-note}
+## Your turn 2
+Check the estimates of fair or poor health for insured and uninsured survivors.
+
+*Expected result: insured survivors: Present. Uninsured survivors: Suppress, because the effective sample size (29.6) is below 30.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+check_proportion(survivors, fair_poor, insured)
+```
+
+Notice that the *share* of survivors who are uninsured (2.2% in a Table 1) can be perfectly reliable, while the *health of* uninsured survivors cannot: the first uses all 2,800 survivors, the second only 44.
+:::
+
+### Small subgroups
+
+The rules matter most when you cut the data finely. Here is fair or poor health by income among survivors aged 18 to 44.
+
+```{r}
+survivors %>%
+  filter(age_group == "18-44") %>%
+  check_proportion(fair_poor, poverty)
+```
+
+All four are suppressed, each for a different reason. With 159 young survivors in the whole sample, splitting them four ways leaves too few in each group.
+
+::: {.callout-note}
+## Your turn 3
+Combine income into two groups, "Below 200%" and "200% or more", and check again for survivors aged 18 to 44. Hint: create the new variable with `mutate()` and `if_else()` on the design, then use it as the group.
+
+*Expected result: 200% or more: 18.3%, Present. Below 200%: still suppressed (CI 40 points wide).*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+survivors %>%
+  filter(age_group == "18-44") %>%
+  mutate(income2 = if_else(poverty %in% c("Below 100%", "100-199%"), "Below 200%", "200% or more")) %>%
+  check_proportion(fair_poor, income2)
+```
+
+Combining categories helped one group but not the other. The usual remaining options are to **pool several years** of NHIS data (which needs adjusted weights; see the NCHS survey description) or to **change the question**, for example by studying all survivors and adjusting for age instead of reporting age-specific estimates.
+:::
+
+In a table, a suppressed estimate is usually replaced by an asterisk with a footnote such as: "Estimate does not meet NCHS standards of reliability."
+
+## 5. Writing the methods
+
+A methods section for an NHIS analysis tells readers exactly what you did, so they can judge it and repeat it. It should cover:
+
+1. **Data**: survey, year, file, and source
+2. **Study population and definitions**, including anything you excluded
+3. **Variables**: how the outcome and main variables were defined from the original codes
+4. **Statistical methods**: weights, variance estimation, the tests and models, and software
+5. **Reliability**: how unreliable estimates were handled
+
+Your scripts already contain most of this. Here is a draft for the project in these lessons:
+
+> **Data.** We used the 2025 National Health Interview Survey (NHIS) Sample Adult public-use file, an annual, nationally representative household survey of the U.S. civilian noninstitutionalized population conducted by the National Center for Health Statistics (NCHS).
+>
+> **Study population.** Cancer survivors were adults who reported ever being told by a doctor or other health professional that they had cancer, excluding those whose only reported cancer was non-melanoma skin cancer (n = 2,833).
+>
+> **Measures.** The outcome was fair or poor self-rated health (versus excellent, very good, or good). Family income was the ratio of family income to the federal poverty threshold, using NCHS's imputed values where income was not reported, categorized as below 100%, 100–199%, 200–399%, and 400% or more. Education was categorized as high school or less, some college, and bachelor's degree or higher. Responses of refused, not ascertained, or don't know were treated as missing.
+>
+> **Statistical analysis.** All estimates used the sample adult weights, and variances were estimated by Taylor series linearization using the NHIS public-use strata and primary sampling units. Subgroup estimates used the full sample (domain estimation). Associations were tested with Rao-Scott adjusted chi-square tests, and adjusted odds ratios were estimated with survey-weighted logistic regression including income, education, age group, and sex. Estimates were evaluated against the NCHS Data Presentation Standards for Proportions, and estimates not meeting them were suppressed. Analyses used R (version 4.5.2) with the survey (4.5) and srvyr (1.3.1) packages.
+
+Taylor series linearization is the method the survey package uses by default with `as_survey_design(ids = , strata = )`. Fill in your own versions with:
+
+```{r}
+R.version.string
+packageVersion("survey")
+packageVersion("srvyr")
+```
+
+Cite R and the packages too. `citation()` and `citation("survey")` print the references.
+
+## 6. Adding your own variables
+
+The teaching file has 16 of the 577 variables in the 2025 Sample Adult file. For your own question, go back to the source:
+
+1. Download the full file from the [NCHS NHIS website](https://www.cdc.gov/nchs/nhis/) and save it in `data/raw/`.
+2. Read it with `read_csv(..., guess_max = 24215)` (N1).
+3. For each variable you add, read its codebook entry: the exact question, the **universe** (who was asked), and the codes (N1).
+4. Add it to your preparation script: special codes to `NA`, then recode, then **compare your counts with the codebook** (N2).
+5. Keep `WTFA_A`, `PSTRAT`, and `PPSU`, and keep every adult (N2, N5).
+
+Before combining **several years** of NHIS data, read the section on pooling in the NCHS survey description: the weights must be adjusted, and questions sometimes change between years.
+
+## 7. Checklist
+
+Before you share any result, check that:
+
+- [ ] Every script passes the fresh-start test, in order
+- [ ] Every recode was checked against the codebook counts
+- [ ] The design was built from the full file, with weights, strata, and PSUs, and subgroups were filtered on the design
+- [ ] Every estimate is reported with its unweighted `n` and a 95% confidence interval
+- [ ] Every percent was checked against the NCHS standards
+- [ ] Odds ratios are described as odds, not risk
+- [ ] The methods section says how each of these was done
+
+## The end of R for Survey Data
+
+You have gone from reading your first codebook entry to a design-based analysis that you can defend line by line. The same skills apply to other national surveys, such as NHANES, BRFSS, and MEPS: each has its own weights, design variables, and documentation, and the habits are the same.
+
+Back to the [R for Survey Data overview](index.qmd), or the [Tutorials home page](../index.qmd).

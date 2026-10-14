@@ -98,6 +98,8 @@ website:
               href: survey/n5-estimates.qmd
             - text: "N6: Tests and Regression"
               href: survey/n6-regression.qmd
+            - text: "N7: Your Own Project"
+              href: survey/n7-project.qmd
 
 execute:
   freeze: auto   # re-run a page's R code only when that page changes
