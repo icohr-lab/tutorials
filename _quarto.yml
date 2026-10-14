@@ -3,6 +3,8 @@ project:
   render:
     - "*.qmd"
     - "!notebooks/"
+  resources:
+    - survey/nhis-project.zip
 
 website:
   title: "Tutorials"
@@ -86,6 +88,13 @@ website:
               href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N1_Meet_the_NHIS.ipynb
             - text: "N2: Preparing Variables"
               href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N2_Preparing_Variables.ipynb
+        - section: "Lessons (RStudio)"
+          contents:
+            - text: "N3: Moving to RStudio"
+              href: survey/n3-rstudio.qmd
+
+execute:
+  freeze: auto   # re-run a page's R code only when that page changes
 
 format:
   html:

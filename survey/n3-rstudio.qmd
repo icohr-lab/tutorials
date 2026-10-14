@@ -1,0 +1,204 @@
+---
+title: "N3 · Moving to RStudio"
+subtitle: "R for Survey Data, lesson 3 of 7 · about 45 minutes, including installation"
+---
+
+```{r}
+#| include: false
+# Build `analysis` exactly as the starter project's prepare.R does, with paths for this website
+prep <- readLines("starter/nhis-project/prepare.R")
+prep <- sub("data/nhis2025_adult.csv", "../data/nhis/nhis2025_adult.csv", prep, fixed = TRUE)
+prep <- prep[!grepl("^saveRDS", prep)]
+suppressMessages(eval(parse(text = prep)))
+```
+
+**In this lesson you will learn to:**
+
+- Install R, RStudio, and the packages for survey analysis
+- Open an RStudio project and find your way around RStudio
+- Run a script, and check that it works from a fresh start
+
+**Before this lesson:** [N2: Preparing Variables](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N2_Preparing_Variables.ipynb).
+
+## 1. Why move?
+
+Colab was a good place to start: nothing to install. For a real project it has three problems:
+
+- **Everything disappears** when the session ends: your data, your files, and every package you installed.
+- **Packages must be reinstalled every session.** The survey packages used from N4 on take a while to install.
+- **Real projects have many files** (data, scripts, results) that need to stay together.
+
+RStudio runs on your own computer. You install things once, and your files stay where you put them. From here on, you will read each lesson on this website and type the code into RStudio.
+
+## 2. Install R and RStudio
+
+You need two programs, installed in this order:
+
+1. **R**, the language itself: download it from [CRAN](https://cran.r-project.org/). Choose your operating system (for a Mac, choose the version that matches your processor: Apple silicon or Intel) and install it with the default settings.
+2. **RStudio Desktop**, the program you work in: download it from [Posit](https://posit.co/download/rstudio-desktop/) and install it.
+
+You only ever open **RStudio**. It finds R by itself.
+
+::: {.callout-tip}
+## A university computer?
+If you cannot install software on your computer, ask your instructor about [Posit Cloud](https://posit.cloud/), which runs RStudio in a web browser.
+:::
+
+## 3. Get the starter project
+
+An **RStudio project** is a folder that holds everything for one piece of work, plus a small `.Rproj` file. Opening the `.Rproj` file opens RStudio *inside* that folder, so file paths like `data/nhis2025_adult.csv` just work.
+
+1. **[Download nhis-project.zip](nhis-project.zip)** (about 1.3 MB).
+2. **Unzip it** and move the `nhis-project` folder somewhere permanent, such as your Documents folder.
+   - On Windows, right-click the zip file and choose **Extract All**. Do not work inside the zip file itself; it only looks like a folder.
+   - On a Mac, double-click the zip file.
+3. **Double-click `nhis-project.Rproj`** to open the project in RStudio.
+
+The folder contains:
+
+| File | What it is |
+|---|---|
+| `nhis-project.Rproj` | Opens the project |
+| `data/nhis2025_adult.csv` | The NHIS teaching file from N1 and N2 |
+| `prepare.R` | The N2 code, as a script |
+| `n3.R` ... `n7.R` | Empty scripts, one for each lesson |
+
+## 4. A tour of RStudio
+
+RStudio has four panes:
+
+| Pane | Where | What it is for |
+|---|---|---|
+| **Source** | top left | Scripts: code you write and save. Open `n3.R` to see it. |
+| **Console** | bottom left | Where code actually runs, and where results appear |
+| **Environment** | top right | The objects you have created, such as dataframes |
+| **Files** | bottom right | The files in your project folder |
+
+A **script** is just a text file of R code. Unlike a Colab notebook, the results are not saved in the file; they appear in the Console when you run the code.
+
+Two ways to run code from a script:
+
+- **Run the current line** (or selected lines): **Ctrl + Enter** on Windows, **Cmd + Enter** on a Mac.
+- **Run the whole script** from top to bottom: the **Source** button at the top of the script, or **Ctrl + Shift + S** / **Cmd + Shift + S**.
+
+## 5. Install the packages
+
+Packages are installed **once per computer**, then loaded with `library()` in every script. Type this into the **Console** (not a script, since you never need to run it again) and press Enter:
+
+```{r}
+#| eval: false
+install.packages(c("tidyverse", "survey", "srvyr"))
+```
+
+This can take several minutes. When it finishes, check that each one loads:
+
+```{r}
+#| eval: false
+library(tidyverse)
+library(survey)
+library(srvyr)
+```
+
+Messages are normal; an error that says `there is no package called ...` means the installation did not finish. These lessons were tested with tidyverse 2.0.0, survey 4.5, and srvyr 1.3.1. You can check yours with `packageVersion("srvyr")`.
+
+- **survey** is the standard R package for analyzing complex survey data.
+- **srvyr** lets you use survey methods with the same `%>%`, `filter()`, `group_by()`, and `summarize()` you already know. You will use it from N4 on.
+
+## 6. Run the preparation script
+
+Open `prepare.R` from the Files pane. It is the code you wrote in N2, as one script. Read through it: every step should look familiar. Then click **Source** to run it all.
+
+It reads the teaching file, builds the analysis variables, and saves the result as `data/nhis_analysis.rds`.
+
+::: {.callout-note}
+## Why `.rds` and not `.csv`?
+A CSV file holds only text and numbers. An `.rds` file saves an R object exactly as it is, including details such as the order of the categories you set with `factor()` in N2. Use `saveRDS()` to save and `readRDS()` to read.
+:::
+
+`analysis` now appears in the Environment pane: 24,215 observations of 12 variables.
+
+::: {.callout-note}
+## Your turn 1
+In the Console, check the analysis file with `dim(analysis)` and `count(analysis, survivor)`.
+
+*Expected result: 24,215 rows and 12 columns; 2,833 survivors, 21,349 non-survivors, 33 `NA`.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+dim(analysis)
+count(analysis, survivor)
+```
+:::
+
+## 7. Your first script
+
+Now write code in `n3.R`, where it is saved. A script should be able to **run on its own from a fresh start**, so it begins by loading its packages and its data.
+
+::: {.callout-note}
+## Your turn 2
+In `n3.R`, write a script that:
+
+1. loads the tidyverse,
+2. reads `data/nhis_analysis.rds` with `readRDS()`,
+3. calculates, for **survivors only**, the percent in fair or poor health in each poverty group, as you did for education in N2.
+
+Save the script (**Ctrl + S** / **Cmd + S**), then run it with **Source**.
+
+*Expected result: Below 100% 57.8%; 100-199% 40.8%; 200-399% 27.5%; 400% or more 15.7%.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+#| eval: false
+library(tidyverse)
+
+analysis <- readRDS("data/nhis_analysis.rds")
+```
+
+```{r}
+#| message: false
+analysis %>%
+  filter(survivor == 1, !is.na(fair_poor)) %>%
+  group_by(poverty) %>%
+  summarize(people = n(), pct_fair_poor = 100 * mean(fair_poor))
+```
+:::
+
+## 8. The fresh-start test
+
+A script that works only because of something you typed earlier in the Console will fail for anyone else, including you next week. Test it the way a stranger would run it:
+
+1. **Session > Restart R.** This clears everything from memory; the Environment pane empties.
+2. Run `n3.R` with **Source**.
+
+If it still gives the same result, the script is complete. If you get an error such as `object 'analysis' not found`, something the script needs is missing from it.
+
+::: {.callout-note}
+## Your turn 3
+Do the fresh-start test on `n3.R`.
+
+*Expected result: the same four percentages as before, with no errors.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+If it failed, the most likely cause is a missing `library(tidyverse)` or `readRDS()` line at the top of the script. Every lesson script from now on starts with those two lines (plus `library(srvyr)` from N4).
+:::
+
+## Recap
+
+| Step | How |
+|---|---|
+| Open the project | Double-click `nhis-project.Rproj` |
+| Install a package (once per computer) | `install.packages("name")` in the Console |
+| Load a package (every script) | `library(name)` at the top of the script |
+| Run a line / the whole script | Ctrl/Cmd + Enter / Source |
+| Save and read an R object | `saveRDS(x, "file.rds")`, `readRDS("file.rds")` |
+| Check a script is complete | Session > Restart R, then Source |
+
+## Next
+
+**N4: Why Weights Matter** is coming soon. It uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.

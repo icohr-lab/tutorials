@@ -464,6 +464,6 @@ nb.finish([
     ("factor(x, levels = c(...))", "Put categories in a set order"),
     ("100 * mean(x)", "Percent of 1s in a 0/1 column"),
 ], f"""
-Continue with **N3: Moving to RStudio**, on the [R for Survey Data page]({TUTORIALS}survey/).
+Continue with [N3: Moving to RStudio]({TUTORIALS}survey/n3-rstudio.html), a lesson on the tutorials website.
 """)
 nb.write()
