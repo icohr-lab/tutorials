@@ -21,6 +21,8 @@ website:
       - text: "R for Survey Data"
         href: survey/index.qmd
     right:
+      - text: "Contact"
+        href: contact.qmd
       - icon: github
         href: https://github.com/icohr-lab/tutorials
   sidebar:
