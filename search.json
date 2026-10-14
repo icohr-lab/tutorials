@@ -1,248 +1,123 @@
 [
   {
-    "objectID": "survey/n4-weights.html",
-    "href": "survey/n4-weights.html",
-    "title": "N4 · Why Weights Matter",
+    "objectID": "survey/n5-estimates.html",
+    "href": "survey/n5-estimates.html",
+    "title": "N5 · Weighted Estimates",
     "section": "",
-    "text": "In this lesson you will learn to:\nBefore this lesson: N3: Moving to RStudio. Work in n4.R in your starter project.",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N4: Why Weights Matter. Work in n5.R in your starter project.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#setup",
-    "href": "survey/n4-weights.html#setup",
-    "title": "N4 · Why Weights Matter",
+    "objectID": "survey/n5-estimates.html#setup",
+    "href": "survey/n5-estimates.html#setup",
+    "title": "N5 · Weighted Estimates",
     "section": "1. Setup",
-    "text": "1. Setup\nStart n4.R with these lines. Every lesson script from now on starts the same way.\n\nlibrary(tidyverse)\nlibrary(srvyr)\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\nIf readRDS() says the file does not exist, run prepare.R first (N3, section 6).",
+    "text": "1. Setup\n\nlibrary(tidyverse)\nlibrary(srvyr)\n\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#what-a-weight-is",
-    "href": "survey/n4-weights.html#what-a-weight-is",
-    "title": "N4 · Why Weights Matter",
-    "section": "2. What a weight is",
-    "text": "2. What a weight is\nEach adult in the file has a weight, WTFA_A: the number of U.S. adults that person stands for.\n\nsummary(analysis$WTFA_A)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n   2358    5835    9020   10936   13371   45481 \n\n\nThe median person stands for about 9,000 adults, but weights range from about 2,400 to 45,000. Someone with a weight of 45,000 belongs to a group that was hard to reach or less likely to respond, so each person interviewed from that group has to stand for many more people. Someone with a small weight belongs to a group that was easy to reach.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nAdd up all the weights with sum(). What does the total represent?\nExpected result: 264,821,349, about 265 million: the number of U.S. adults the survey represents (adults living in households, not in institutions such as nursing homes or prisons).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsum(analysis$WTFA_A)\n\n[1] 264821349",
+    "objectID": "survey/n5-estimates.html#subgroups-filter-the-design-not-the-data",
+    "href": "survey/n5-estimates.html#subgroups-filter-the-design-not-the-data",
+    "title": "N5 · Weighted Estimates",
+    "section": "2. Subgroups: filter the design, not the data",
+    "text": "2. Subgroups: filter the design, not the data\nThe research question is about cancer survivors, a subgroup. There are two ways you might try to focus on them.\nThe right way: build the design from the full file, then filter() the design.\n\nnhis_design %&gt;%\n  filter(survivor == 1, poverty == \"Below 100%\") %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1    0.5760        0.4906        0.6613\n\n\nThe wrong way: filter() the data first, then build the design from what is left.\n\nanalysis %&gt;%\n  filter(survivor == 1, poverty == \"Below 100%\") %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\nError in `dplyr::summarise()`:\nℹ In argument: `fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype\n  = \"ci\")`.\nCaused by error in `onestrat()`:\n! Stratum (204) has only one PSU at stage 1\n\n\nAn error. To measure uncertainty, the survey package compares the PSUs within each stratum, so every stratum needs at least two. After cutting the data down to about 200 people, some strata have only one PSU left, and the calculation is impossible.\nFiltering the design instead keeps the full structure of the survey: everyone outside the subgroup stays in the design and simply counts as zero. This is called domain (or subpopulation) estimation, and it is what NCHS recommends in its survey description: analyze subgroups using the full data file.\n\n\n\n\n\n\nWarningWhy not just cut the data when it happens to run?\n\n\n\nFor large subgroups, cutting the data first sometimes runs and gives almost the same answer. But it fails as soon as a subgroup gets small, and searching the error message online leads to settings that silence it without fixing the problem. In other surveys, it can even give a wrong confidence interval with no error at all. Build the design once from the full file, and filter the design. Always.\n\n\nThis is also why lesson N2 kept every adult in the analysis file.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#unweighted-versus-weighted",
-    "href": "survey/n4-weights.html#unweighted-versus-weighted",
-    "title": "N4 · Why Weights Matter",
-    "section": "3. Unweighted versus weighted",
-    "text": "3. Unweighted versus weighted\nHow many U.S. adults are 65 or older? Here is the share of the sample, and the share once each person counts as many people as their weight says. weighted.mean() does that.\n\nanalysis %&gt;%\n  filter(!is.na(age_group)) %&gt;%\n  summarize(\n    unweighted = 100 * mean(age_group == \"65+\"),\n    weighted   = 100 * weighted.mean(age_group == \"65+\", WTFA_A)\n  )\n\n# A tibble: 1 × 2\n  unweighted weighted\n       &lt;dbl&gt;    &lt;dbl&gt;\n1      35.06    23.26\n\n\nMore than a third of the people interviewed are 65 or older, but they make up less than a quarter of U.S. adults. Older adults are more likely to live alone or with just one other adult (and only one adult per household is interviewed), and they are more likely to take part, so the sample has too many of them. Each of them gets a smaller weight to make up for it.\nThis matters for the project because cancer is much more common at older ages. Any unweighted estimate about survivors leans toward older people.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nWhat percent of U.S. adults are cancer survivors? Calculate it unweighted and weighted, leaving out people with missing survivor.\nExpected result: 11.7% unweighted, 8.7% weighted.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nanalysis %&gt;%\n  filter(!is.na(survivor)) %&gt;%\n  summarize(\n    unweighted = 100 * mean(survivor),\n    weighted   = 100 * weighted.mean(survivor, WTFA_A)\n  )\n\n# A tibble: 1 × 2\n  unweighted weighted\n       &lt;dbl&gt;    &lt;dbl&gt;\n1      11.72    8.703",
+    "objectID": "survey/n5-estimates.html#the-income-gradient-among-survivors",
+    "href": "survey/n5-estimates.html#the-income-gradient-among-survivors",
+    "title": "N5 · Weighted Estimates",
+    "section": "3. The income gradient among survivors",
+    "text": "3. The income gradient among survivors\nNow the core of the project. For survivors, estimate the percent in fair or poor health in each income group. Two additions to what you know:\n\nfilter(!is.na(fair_poor)) on the design leaves out the 2 survivors without an answer, so the counts describe exactly the people in each estimate.\nunweighted(n()) counts the people in the sample behind each estimate. Always report it next to weighted estimates.\n\n\nby_poverty &lt;- nhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor)) %&gt;%\n  group_by(poverty) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nby_poverty\n\n# A tibble: 4 × 5\n  poverty          n fair_poor fair_poor_low fair_poor_upp\n  &lt;fct&gt;        &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 Below 100%     206     57.60         49.13         66.06\n2 100-199%       495     43.68         38.17         49.19\n3 200-399%       891     27.44         23.78         31.10\n4 400% or more  1239     16.86         14.34         19.38\n\n\nA steep gradient: among survivors living below the poverty line, more than half report fair or poor health; among those with family income at least four times the poverty line, about one in six do. The confidence intervals of the lowest and highest groups are far apart, so this is not just sampling noise.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nDo the same for education among survivors. Remember to leave out missing education.\nExpected result: High school or less 40.2% (95% CI 36.1 to 44.2); Some college 28.6% (24.9 to 32.3); Bachelor or higher 14.7% (12.4 to 17.0).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %&gt;%\n  group_by(education) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 3 × 5\n  education               n fair_poor fair_poor_low fair_poor_upp\n  &lt;fct&gt;               &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 High school or less   867     40.17         36.13         44.20\n2 Some college          846     28.60         24.87         32.33\n3 Bachelor or higher   1109     14.73         12.41         17.05",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#why-weights-are-not-enough",
-    "href": "survey/n4-weights.html#why-weights-are-not-enough",
-    "title": "N4 · Why Weights Matter",
-    "section": "4. Why weights are not enough",
-    "text": "4. Why weights are not enough\nweighted.mean() gives the right estimate. It cannot tell you how certain that estimate is, and every estimate from a sample needs a measure of uncertainty, usually a 95% confidence interval.\nUncertainty depends on how the sample was drawn, and the NHIS was not drawn one person at a time:\n\nClusters (sampling units). The NHIS first picks geographic areas, then households within them. People in the same area tend to be alike, so 30 people from one area tell you less than 30 people from 30 different areas. The column PPSU records each person’s primary sampling unit (PSU).\nStrata. The country is first divided into groups of areas called strata, and areas are picked within each one. This makes estimates more precise. The column PSTRAT records the stratum.\n\nSoftware that ignores clusters treats everyone as independent, and its confidence intervals come out too narrow: they claim more certainty than the data support.",
+    "objectID": "survey/n5-estimates.html#when-an-estimate-is-too-uncertain",
+    "href": "survey/n5-estimates.html#when-an-estimate-is-too-uncertain",
+    "title": "N5 · Weighted Estimates",
+    "section": "4. When an estimate is too uncertain",
+    "text": "4. When an estimate is too uncertain\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nNow estimate fair or poor health among survivors with and without health insurance. Look closely at n and at the confidence intervals. What do you notice?\nExpected result: insured 27.4% (95% CI 25.3 to 29.5), based on 2,783 people; uninsured 29.0%, based on only 44 people, with a confidence interval from about 12% to 46%.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(insured)) %&gt;%\n  group_by(insured) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 2 × 5\n  insured     n fair_poor fair_poor_low fair_poor_upp\n  &lt;chr&gt;   &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 No         44     28.95         12.40         45.51\n2 Yes      2783     27.39         25.30         29.49\n\n\nMost survivors are 65 or older and covered by Medicare, so only 44 uninsured survivors (with an answer about their health) were interviewed. The estimate for them, 29%, is compatible with anything from about 12% to 46%: it says almost nothing. Do not report a number like this as a finding. Lesson N7 covers NCHS’s rules for when an estimate is too unreliable to publish.\n\n\n\nThe habit to take away: always look at n and the width of the confidence interval before you look at the estimate.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#the-survey-design-object",
-    "href": "survey/n4-weights.html#the-survey-design-object",
-    "title": "N4 · Why Weights Matter",
-    "section": "5. The survey design object",
-    "text": "5. The survey design object\nThe srvyr package stores the data together with the design in one object. Everything after this works on that object instead of on analysis.\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(\n    ids = PPSU,          # primary sampling units (clusters)\n    strata = PSTRAT,     # strata\n    weights = WTFA_A,    # weights\n    nest = TRUE          # PSU numbers restart within each stratum\n  )\n\nnhis_design\n\nStratified 1 - level Cluster Sampling design (with replacement)\nWith (608) clusters.\nCalled via srvyr\nSampling variables:\n  - ids: PPSU \n  - strata: PSTRAT \n  - weights: WTFA_A \nData variables: \n  - HHX (chr), WTFA_A (dbl), PSTRAT (dbl), PPSU (dbl), fair_poor (dbl),\n    survivor (dbl), poverty (fct), education (fct), age (dbl), age_group (chr),\n    sex (chr), insured (chr)\n\n\nEach argument names a column from the file. These four lines come straight from NCHS’s own instructions for analyzing the NHIS in R, in the 2025 survey description.\n\n\n\n\n\n\nNoteWhy nest = TRUE?\n\n\n\nPSU numbers are only unique within a stratum: two different areas in two different strata can share a number.\n\nn_distinct(analysis$PPSU)                     # PSU numbers\n\n[1] 606\n\nnrow(distinct(analysis, PSTRAT, PPSU))        # actual PSUs\n\n[1] 608\n\n\nnest = TRUE tells R to identify a PSU by its stratum and its number. Without it, R would merge areas that are really separate.",
+    "objectID": "survey/n5-estimates.html#survivors-compared-with-everyone-else",
+    "href": "survey/n5-estimates.html#survivors-compared-with-everyone-else",
+    "title": "N5 · Weighted Estimates",
+    "section": "5. Survivors compared with everyone else",
+    "text": "5. Survivors compared with everyone else\nIs poor health among low-income survivors just about income? Compare survivors and non-survivors at each income level by grouping by both.\n\nby_both &lt;- nhis_design %&gt;%\n  filter(!is.na(survivor), !is.na(fair_poor)) %&gt;%\n  group_by(survivor, poverty) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nby_both\n\n# A tibble: 8 × 6\n# Groups:   survivor [2]\n  survivor poverty          n fair_poor fair_poor_low fair_poor_upp\n     &lt;dbl&gt; &lt;fct&gt;        &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1        0 Below 100%    2004    28.09         25.66         30.51 \n2        0 100-199%      3681    22.66         20.96         24.35 \n3        0 200-399%      6399    12.82         11.80         13.84 \n4        0 400% or more  9260     7.051         6.434         7.668\n5        1 Below 100%     206    57.60         49.13         66.06 \n6        1 100-199%       495    43.68         38.17         49.19 \n7        1 200-399%       891    27.44         23.78         31.10 \n8        1 400% or more  1239    16.86         14.34         19.38 \n\n\nAt every income level, survivors are roughly twice as likely as other adults to report fair or poor health. And the income gradient appears in both groups. A table this size is hard to take in; a plot is better.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#estimates-with-confidence-intervals",
-    "href": "survey/n4-weights.html#estimates-with-confidence-intervals",
-    "title": "N4 · Why Weights Matter",
-    "section": "6. Estimates with confidence intervals",
-    "text": "6. Estimates with confidence intervals\nUse summarize() on the design object, with survey_mean() in place of mean(). vartype = \"ci\" asks for a 95% confidence interval, and na.rm = TRUE leaves out missing values.\n\nnhis_design %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1    0.1472        0.1409        0.1534\n\n\nsurvey_mean() gives a proportion. About 14.7% of U.S. adults report fair or poor health, and the 95% confidence interval runs from 14.1% to 15.3%. (The unweighted figure would have been 15.8%.)\ngroup_by() works on the design just as it does on a dataframe.\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nEstimate the percent in fair or poor health for survivors and non-survivors, with 95% confidence intervals. Start from nhis_design, remove missing survivor with filter(), then use group_by() and survey_mean(). Multiply by 100 with mutate() if you like.\nExpected result: survivors 27.4% (95% CI 25.3% to 29.5%); non-survivors 13.5% (12.9% to 14.1%).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(!is.na(survivor)) %&gt;%\n  group_by(survivor) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 2 × 4\n  survivor fair_poor fair_poor_low fair_poor_upp\n     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1        0     13.50         12.87         14.14\n2        1     27.42         25.34         29.51\n\n\nacross(starts_with(\"fair_poor\"), ~ 100 * .x) multiplies every column whose name starts with fair_poor (the estimate and both limits) by 100.\n\n\n\nAmong survivors, the weighted estimate (27.4%) is close to the unweighted one from N2 (26.9%). Weighting does not always change an estimate much, as here, but sometimes it does, as with age. You only know by doing it.",
+    "objectID": "survey/n5-estimates.html#plotting-estimates-with-confidence-intervals",
+    "href": "survey/n5-estimates.html#plotting-estimates-with-confidence-intervals",
+    "title": "N5 · Weighted Estimates",
+    "section": "6. Plotting estimates with confidence intervals",
+    "text": "6. Plotting estimates with confidence intervals\ngeom_pointrange() draws each estimate as a point with a line for its confidence interval. It needs y for the estimate and ymin and ymax for the limits. expand_limits(y = 0) makes the axis start at zero, so differences are not visually exaggerated.\n\nggplot(by_poverty, aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +\n  geom_pointrange() +\n  expand_limits(y = 0) +\n  labs(\n    x = \"Family income (percent of poverty line)\",\n    y = \"Fair or poor health (%)\",\n    title = \"Cancer survivors, NHIS 2025\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\nTo show two groups side by side, map one of them to color and nudge the points apart with position_dodge(). factor() turns the 0/1 survivor column into labels for the legend.\n\nby_both %&gt;%\n  mutate(group = factor(survivor, levels = c(1, 0), labels = c(\"Cancer survivors\", \"Other adults\"))) %&gt;%\n  ggplot(aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp, color = group)) +\n  geom_pointrange(position = position_dodge(width = 0.4)) +\n  expand_limits(y = 0) +\n  labs(\n    x = \"Family income (percent of poverty line)\",\n    y = \"Fair or poor health (%)\",\n    color = NULL,\n    title = \"Fair or poor health by income, NHIS 2025\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nMake the first kind of plot for education among survivors: one point and interval for each education group.\nExpected result: three points falling from about 40% to about 15%, with intervals that do not overlap between the lowest and highest groups.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nby_education &lt;- nhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %&gt;%\n  group_by(education) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nggplot(by_education, aes(x = education, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +\n  geom_pointrange() +\n  expand_limits(y = 0) +\n  labs(x = NULL, y = \"Fair or poor health (%)\", title = \"Cancer survivors, NHIS 2025\") +\n  theme_minimal()",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#seeing-what-the-design-does",
-    "href": "survey/n4-weights.html#seeing-what-the-design-does",
-    "title": "N4 · Why Weights Matter",
-    "section": "7. Seeing what the design does",
-    "text": "7. Seeing what the design does\nHere is the same estimate, fair or poor health among survivors, calculated three ways.\n\n# 1. Ignoring the design: a simple confidence interval for a proportion\nsurv &lt;- analysis %&gt;% filter(survivor == 1, !is.na(fair_poor))\np &lt;- mean(surv$fair_poor)\nse &lt;- sqrt(p * (1 - p) / nrow(surv))\nc(estimate = p, low = p - 1.96 * se, high = p + 1.96 * se) * 100\n\nestimate      low     high \n26.88096 25.24782 28.51410 \n\n# 2. Weights only\nanalysis %&gt;%\n  as_survey_design(weights = WTFA_A) %&gt;%\n  filter(survivor == 1) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\") * 100)\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1     27.42         25.45         29.39\n\n# 3. The full design\nnhis_design %&gt;%\n  filter(survivor == 1) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\") * 100)\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1     27.42         25.34         29.51\n\n\n\n\n\nMethod\nEstimate\n95% CI\nWidth\n\n\n\n\nIgnoring the design\n26.9%\n25.2 to 28.5\n3.3\n\n\nWeights only\n27.4%\n25.5 to 29.4\n3.9\n\n\nFull design\n27.4%\n25.3 to 29.5\n4.2\n\n\n\n\nThe weights fix the estimate (26.9% becomes 27.4%).\nThe strata and PSUs fix the uncertainty: the honest interval is about a quarter wider than the naive one.\n\nThe difference here is modest. For smaller groups and for variables that cluster strongly by place, such as income, it can be much larger. Since you cannot know in advance, always use the full design.",
+    "objectID": "survey/n5-estimates.html#what-the-estimates-do-and-do-not-show",
+    "href": "survey/n5-estimates.html#what-the-estimates-do-and-do-not-show",
+    "title": "N5 · Weighted Estimates",
+    "section": "7. What the estimates do and do not show",
+    "text": "7. What the estimates do and do not show\nThese are descriptive estimates: they describe how fair or poor health is distributed among U.S. adult cancer survivors. They do not explain why. Income and education are related to each other, to age, and to the kinds of cancer people have had. Separating these influences takes a regression model, which is lesson N6.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#from-percentages-to-people",
-    "href": "survey/n4-weights.html#from-percentages-to-people",
-    "title": "N4 · Why Weights Matter",
-    "section": "8. From percentages to people",
-    "text": "8. From percentages to people\nWeights also turn counts of people in the sample into counts of people in the country. survey_total() adds up the weights.\n\n\n\n\n\n\nNoteYour turn 4\n\n\n\nHow many U.S. adults are cancer survivors? Use group_by(survivor) and survey_total(vartype = \"ci\") on nhis_design. Dividing by 1e6 (one million) makes the numbers easier to read.\nExpected result: about 23.0 million survivors (95% CI 21.8 to 24.2 million). The other rows are non-survivors and people with missing survivor.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  group_by(survivor) %&gt;%\n  summarize(adults = survey_total(vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"adults\"), ~ .x / 1e6))   # in millions\n\n# A tibble: 3 × 4\n  survivor   adults adults_low adults_upp\n     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;\n1        0 241.5      233.8      249.2   \n2        1  23.02      21.83      24.22  \n3       NA   0.2731     0.1688     0.3774\n\n\n2,833 people in the sample stand for about 23 million U.S. adults. (Remember the definition from N2: non-melanoma skin cancer alone does not count.)",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N4: Why Weights Matter"
-    ]
-  },
-  {
-    "objectID": "survey/n4-weights.html#recap",
-    "href": "survey/n4-weights.html#recap",
-    "title": "N4 · Why Weights Matter",
+    "objectID": "survey/n5-estimates.html#recap",
+    "href": "survey/n5-estimates.html#recap",
+    "title": "N5 · Weighted Estimates",
     "section": "Recap",
-    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nweighted.mean(x, w)\nWeighted mean or proportion, without uncertainty\n\n\nas_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)\nThe NHIS design object\n\n\nsurvey_mean(x, na.rm = TRUE, vartype = \"ci\")\nWeighted mean or proportion with a 95% CI\n\n\nsurvey_total(vartype = \"ci\")\nEstimated number of people, with a 95% CI\n\n\ngroup_by() on the design\nEstimates for each group\n\n\n\nThe rule: weights for the estimate; strata and PSUs for the uncertainty; always all three.",
+    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nnhis_design %&gt;% filter(...)\nEstimate for a subgroup, keeping the full design\n\n\nunweighted(n())\nNumber of people in the sample behind an estimate\n\n\ngroup_by(a, b) on the design\nEstimates for every combination of two variables\n\n\ngeom_pointrange(aes(y, ymin, ymax))\nPlot estimates with their confidence intervals\n\n\nposition_dodge(width = 0.4)\nPlace groups side by side\n\n\nexpand_limits(y = 0)\nStart the axis at zero\n\n\n\nThe rules: build the design from the full file and filter the design; report n with every estimate; check the confidence interval before trusting the estimate.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n4-weights.html#next",
-    "href": "survey/n4-weights.html#next",
-    "title": "N4 · Why Weights Matter",
+    "objectID": "survey/n5-estimates.html#next",
+    "href": "survey/n5-estimates.html#next",
+    "title": "N5 · Weighted Estimates",
     "section": "Next",
-    "text": "Next\nN5: Weighted Estimates is coming soon: estimates for subgroups, why you filter the design and never the data, comparing socioeconomic groups, and plotting estimates with confidence intervals.",
+    "text": "Next\nN6: Tests and Regression is coming soon: testing whether differences are larger than chance, and estimating the income gradient while accounting for age, sex, and education.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N4: Why Weights Matter"
+      "N5: Weighted Estimates"
     ]
-  },
-  {
-    "objectID": "survey/index.html",
-    "href": "survey/index.html",
-    "title": "R for Survey Data",
-    "section": "",
-    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
-    "crumbs": [
-      "R for Survey Data",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "survey/index.html#lessons",
-    "href": "survey/index.html#lessons",
-    "title": "R for Survey Data",
-    "section": "Lessons",
-    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nReady\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nReady\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nPlanned\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nPlanned\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
-    "crumbs": [
-      "R for Survey Data",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html",
-    "href": "foundations/index.html",
-    "title": "R Foundations",
-    "section": "",
-    "text": "A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#how-to-use-the-notebooks",
-    "href": "foundations/index.html#how-to-use-the-notebooks",
-    "title": "R Foundations",
-    "section": "How to use the notebooks",
-    "text": "How to use the notebooks\n\nClick a notebook link below.\nSign in with a Google account.\nChoose File &gt; Save a copy in Drive and work in your copy. If you skip this step, your work is lost when you close the tab.\nRun the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#notebooks",
-    "href": "foundations/index.html#notebooks",
-    "title": "R Foundations",
-    "section": "Notebooks",
-    "text": "Notebooks\n\n\n\nNotebook\nCovers\n\n\n\n\nF1: First Steps in R\nRunning code, arithmetic, variables, functions, reading error messages\n\n\nF2: Vectors and Data Types\nVectors, numbers vs. text, TRUE/FALSE, dates, missing values\n\n\nF3: Dataframes\nBuilding and inspecting a table; one row per person or many\n\n\nF4: Choosing Rows and Columns\nPackages, select(), filter(), the pipe\n\n\nF5: New Columns and Data Files\nmutate(), if_else(), reading a CSV file, exploring a new dataset\n\n\nF6: Combining Tables\nInner and left joins, missing values from joins, duplicated rows",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#where-next",
-    "href": "foundations/index.html#where-next",
-    "title": "R Foundations",
-    "section": "Where next",
-    "text": "Where next\n\nWorking with All of Us data? Continue with R for All of Us.\nWorking with national survey data? Continue with R for Survey Data.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html",
-    "href": "aou/index.html",
-    "title": "R for All of Us",
-    "section": "",
-    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html#path-a-write-it-yourself",
-    "href": "aou/index.html#path-a-write-it-yourself",
-    "title": "R for All of Us",
-    "section": "Path A: Write It Yourself",
-    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html#path-b-ai-assisted",
-    "href": "aou/index.html#path-b-ai-assisted",
-    "title": "R for All of Us",
-    "section": "Path B: AI-Assisted",
-    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Tutorials",
-    "section": "",
-    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
-  },
-  {
-    "objectID": "index.html#how-the-tutorials-work",
-    "href": "index.html#how-the-tutorials-work",
-    "title": "Tutorials",
-    "section": "How the tutorials work",
-    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
   },
   {
     "objectID": "survey/n3-rstudio.html",
@@ -374,6 +249,251 @@
       "R for Survey Data",
       "Lessons (RStudio)",
       "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Tutorials",
+    "section": "",
+    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
+  },
+  {
+    "objectID": "index.html#how-the-tutorials-work",
+    "href": "index.html#how-the-tutorials-work",
+    "title": "Tutorials",
+    "section": "How the tutorials work",
+    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
+  },
+  {
+    "objectID": "aou/index.html",
+    "href": "aou/index.html",
+    "title": "R for All of Us",
+    "section": "",
+    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-a-write-it-yourself",
+    "href": "aou/index.html#path-a-write-it-yourself",
+    "title": "R for All of Us",
+    "section": "Path A: Write It Yourself",
+    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-b-ai-assisted",
+    "href": "aou/index.html#path-b-ai-assisted",
+    "title": "R for All of Us",
+    "section": "Path B: AI-Assisted",
+    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html",
+    "href": "foundations/index.html",
+    "title": "R Foundations",
+    "section": "",
+    "text": "A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#how-to-use-the-notebooks",
+    "href": "foundations/index.html#how-to-use-the-notebooks",
+    "title": "R Foundations",
+    "section": "How to use the notebooks",
+    "text": "How to use the notebooks\n\nClick a notebook link below.\nSign in with a Google account.\nChoose File &gt; Save a copy in Drive and work in your copy. If you skip this step, your work is lost when you close the tab.\nRun the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#notebooks",
+    "href": "foundations/index.html#notebooks",
+    "title": "R Foundations",
+    "section": "Notebooks",
+    "text": "Notebooks\n\n\n\nNotebook\nCovers\n\n\n\n\nF1: First Steps in R\nRunning code, arithmetic, variables, functions, reading error messages\n\n\nF2: Vectors and Data Types\nVectors, numbers vs. text, TRUE/FALSE, dates, missing values\n\n\nF3: Dataframes\nBuilding and inspecting a table; one row per person or many\n\n\nF4: Choosing Rows and Columns\nPackages, select(), filter(), the pipe\n\n\nF5: New Columns and Data Files\nmutate(), if_else(), reading a CSV file, exploring a new dataset\n\n\nF6: Combining Tables\nInner and left joins, missing values from joins, duplicated rows",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#where-next",
+    "href": "foundations/index.html#where-next",
+    "title": "R Foundations",
+    "section": "Where next",
+    "text": "Where next\n\nWorking with All of Us data? Continue with R for All of Us.\nWorking with national survey data? Continue with R for Survey Data.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "survey/index.html",
+    "href": "survey/index.html",
+    "title": "R for Survey Data",
+    "section": "",
+    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "survey/index.html#lessons",
+    "href": "survey/index.html#lessons",
+    "title": "R for Survey Data",
+    "section": "Lessons",
+    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nReady\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nReady\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nReady\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nPlanned\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html",
+    "href": "survey/n4-weights.html",
+    "title": "N4 · Why Weights Matter",
+    "section": "",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N3: Moving to RStudio. Work in n4.R in your starter project.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#setup",
+    "href": "survey/n4-weights.html#setup",
+    "title": "N4 · Why Weights Matter",
+    "section": "1. Setup",
+    "text": "1. Setup\nStart n4.R with these lines. Every lesson script from now on starts the same way.\n\nlibrary(tidyverse)\nlibrary(srvyr)\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\nIf readRDS() says the file does not exist, run prepare.R first (N3, section 6).",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#what-a-weight-is",
+    "href": "survey/n4-weights.html#what-a-weight-is",
+    "title": "N4 · Why Weights Matter",
+    "section": "2. What a weight is",
+    "text": "2. What a weight is\nEach adult in the file has a weight, WTFA_A: the number of U.S. adults that person stands for.\n\nsummary(analysis$WTFA_A)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n   2358    5835    9020   10936   13371   45481 \n\n\nThe median person stands for about 9,000 adults, but weights range from about 2,400 to 45,000. Someone with a weight of 45,000 belongs to a group that was hard to reach or less likely to respond, so each person interviewed from that group has to stand for many more people. Someone with a small weight belongs to a group that was easy to reach.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nAdd up all the weights with sum(). What does the total represent?\nExpected result: 264,821,349, about 265 million: the number of U.S. adults the survey represents (adults living in households, not in institutions such as nursing homes or prisons).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsum(analysis$WTFA_A)\n\n[1] 264821349",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#unweighted-versus-weighted",
+    "href": "survey/n4-weights.html#unweighted-versus-weighted",
+    "title": "N4 · Why Weights Matter",
+    "section": "3. Unweighted versus weighted",
+    "text": "3. Unweighted versus weighted\nHow many U.S. adults are 65 or older? Here is the share of the sample, and the share once each person counts as many people as their weight says. weighted.mean() does that.\n\nanalysis %&gt;%\n  filter(!is.na(age_group)) %&gt;%\n  summarize(\n    unweighted = 100 * mean(age_group == \"65+\"),\n    weighted   = 100 * weighted.mean(age_group == \"65+\", WTFA_A)\n  )\n\n# A tibble: 1 × 2\n  unweighted weighted\n       &lt;dbl&gt;    &lt;dbl&gt;\n1      35.06    23.26\n\n\nMore than a third of the people interviewed are 65 or older, but they make up less than a quarter of U.S. adults. Older adults are more likely to live alone or with just one other adult (and only one adult per household is interviewed), and they are more likely to take part, so the sample has too many of them. Each of them gets a smaller weight to make up for it.\nThis matters for the project because cancer is much more common at older ages. Any unweighted estimate about survivors leans toward older people.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nWhat percent of U.S. adults are cancer survivors? Calculate it unweighted and weighted, leaving out people with missing survivor.\nExpected result: 11.7% unweighted, 8.7% weighted.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nanalysis %&gt;%\n  filter(!is.na(survivor)) %&gt;%\n  summarize(\n    unweighted = 100 * mean(survivor),\n    weighted   = 100 * weighted.mean(survivor, WTFA_A)\n  )\n\n# A tibble: 1 × 2\n  unweighted weighted\n       &lt;dbl&gt;    &lt;dbl&gt;\n1      11.72    8.703",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#why-weights-are-not-enough",
+    "href": "survey/n4-weights.html#why-weights-are-not-enough",
+    "title": "N4 · Why Weights Matter",
+    "section": "4. Why weights are not enough",
+    "text": "4. Why weights are not enough\nweighted.mean() gives the right estimate. It cannot tell you how certain that estimate is, and every estimate from a sample needs a measure of uncertainty, usually a 95% confidence interval.\nUncertainty depends on how the sample was drawn, and the NHIS was not drawn one person at a time:\n\nClusters (sampling units). The NHIS first picks geographic areas, then households within them. People in the same area tend to be alike, so 30 people from one area tell you less than 30 people from 30 different areas. The column PPSU records each person’s primary sampling unit (PSU).\nStrata. The country is first divided into groups of areas called strata, and areas are picked within each one. This makes estimates more precise. The column PSTRAT records the stratum.\n\nSoftware that ignores clusters treats everyone as independent, and its confidence intervals come out too narrow: they claim more certainty than the data support.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#the-survey-design-object",
+    "href": "survey/n4-weights.html#the-survey-design-object",
+    "title": "N4 · Why Weights Matter",
+    "section": "5. The survey design object",
+    "text": "5. The survey design object\nThe srvyr package stores the data together with the design in one object. Everything after this works on that object instead of on analysis.\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(\n    ids = PPSU,          # primary sampling units (clusters)\n    strata = PSTRAT,     # strata\n    weights = WTFA_A,    # weights\n    nest = TRUE          # PSU numbers restart within each stratum\n  )\n\nnhis_design\n\nStratified 1 - level Cluster Sampling design (with replacement)\nWith (608) clusters.\nCalled via srvyr\nSampling variables:\n  - ids: PPSU \n  - strata: PSTRAT \n  - weights: WTFA_A \nData variables: \n  - HHX (chr), WTFA_A (dbl), PSTRAT (dbl), PPSU (dbl), fair_poor (dbl),\n    survivor (dbl), poverty (fct), education (fct), age (dbl), age_group (chr),\n    sex (chr), insured (chr)\n\n\nEach argument names a column from the file. These four lines come straight from NCHS’s own instructions for analyzing the NHIS in R, in the 2025 survey description.\n\n\n\n\n\n\nNoteWhy nest = TRUE?\n\n\n\nPSU numbers are only unique within a stratum: two different areas in two different strata can share a number.\n\nn_distinct(analysis$PPSU)                     # PSU numbers\n\n[1] 606\n\nnrow(distinct(analysis, PSTRAT, PPSU))        # actual PSUs\n\n[1] 608\n\n\nnest = TRUE tells R to identify a PSU by its stratum and its number. Without it, R would merge areas that are really separate.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#estimates-with-confidence-intervals",
+    "href": "survey/n4-weights.html#estimates-with-confidence-intervals",
+    "title": "N4 · Why Weights Matter",
+    "section": "6. Estimates with confidence intervals",
+    "text": "6. Estimates with confidence intervals\nUse summarize() on the design object, with survey_mean() in place of mean(). vartype = \"ci\" asks for a 95% confidence interval, and na.rm = TRUE leaves out missing values.\n\nnhis_design %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1    0.1472        0.1409        0.1534\n\n\nsurvey_mean() gives a proportion. About 14.7% of U.S. adults report fair or poor health, and the 95% confidence interval runs from 14.1% to 15.3%. (The unweighted figure would have been 15.8%.)\ngroup_by() works on the design just as it does on a dataframe.\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nEstimate the percent in fair or poor health for survivors and non-survivors, with 95% confidence intervals. Start from nhis_design, remove missing survivor with filter(), then use group_by() and survey_mean(). Multiply by 100 with mutate() if you like.\nExpected result: survivors 27.4% (95% CI 25.3% to 29.5%); non-survivors 13.5% (12.9% to 14.1%).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(!is.na(survivor)) %&gt;%\n  group_by(survivor) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 2 × 4\n  survivor fair_poor fair_poor_low fair_poor_upp\n     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1        0     13.50         12.87         14.14\n2        1     27.42         25.34         29.51\n\n\nacross(starts_with(\"fair_poor\"), ~ 100 * .x) multiplies every column whose name starts with fair_poor (the estimate and both limits) by 100.\n\n\n\nAmong survivors, the weighted estimate (27.4%) is close to the unweighted one from N2 (26.9%). Weighting does not always change an estimate much, as here, but sometimes it does, as with age. You only know by doing it.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#seeing-what-the-design-does",
+    "href": "survey/n4-weights.html#seeing-what-the-design-does",
+    "title": "N4 · Why Weights Matter",
+    "section": "7. Seeing what the design does",
+    "text": "7. Seeing what the design does\nHere is the same estimate, fair or poor health among survivors, calculated three ways.\n\n# 1. Ignoring the design: a simple confidence interval for a proportion\nsurv &lt;- analysis %&gt;% filter(survivor == 1, !is.na(fair_poor))\np &lt;- mean(surv$fair_poor)\nse &lt;- sqrt(p * (1 - p) / nrow(surv))\nc(estimate = p, low = p - 1.96 * se, high = p + 1.96 * se) * 100\n\nestimate      low     high \n26.88096 25.24782 28.51410 \n\n# 2. Weights only\nanalysis %&gt;%\n  as_survey_design(weights = WTFA_A) %&gt;%\n  filter(survivor == 1) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\") * 100)\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1     27.42         25.45         29.39\n\n# 3. The full design\nnhis_design %&gt;%\n  filter(survivor == 1) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\") * 100)\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1     27.42         25.34         29.51\n\n\n\n\n\nMethod\nEstimate\n95% CI\nWidth\n\n\n\n\nIgnoring the design\n26.9%\n25.2 to 28.5\n3.3\n\n\nWeights only\n27.4%\n25.5 to 29.4\n3.9\n\n\nFull design\n27.4%\n25.3 to 29.5\n4.2\n\n\n\n\nThe weights fix the estimate (26.9% becomes 27.4%).\nThe strata and PSUs fix the uncertainty: the honest interval is about a quarter wider than the naive one.\n\nThe difference here is modest. For smaller groups and for variables that cluster strongly by place, such as income, it can be much larger. Since you cannot know in advance, always use the full design.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#from-percentages-to-people",
+    "href": "survey/n4-weights.html#from-percentages-to-people",
+    "title": "N4 · Why Weights Matter",
+    "section": "8. From percentages to people",
+    "text": "8. From percentages to people\nWeights also turn counts of people in the sample into counts of people in the country. survey_total() adds up the weights.\n\n\n\n\n\n\nNoteYour turn 4\n\n\n\nHow many U.S. adults are cancer survivors? Use group_by(survivor) and survey_total(vartype = \"ci\") on nhis_design. Dividing by 1e6 (one million) makes the numbers easier to read.\nExpected result: about 23.0 million survivors (95% CI 21.8 to 24.2 million). The other rows are non-survivors and people with missing survivor.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  group_by(survivor) %&gt;%\n  summarize(adults = survey_total(vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"adults\"), ~ .x / 1e6))   # in millions\n\n# A tibble: 3 × 4\n  survivor   adults adults_low adults_upp\n     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;\n1        0 241.5      233.8      249.2   \n2        1  23.02      21.83      24.22  \n3       NA   0.2731     0.1688     0.3774\n\n\n2,833 people in the sample stand for about 23 million U.S. adults. (Remember the definition from N2: non-melanoma skin cancer alone does not count.)",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#recap",
+    "href": "survey/n4-weights.html#recap",
+    "title": "N4 · Why Weights Matter",
+    "section": "Recap",
+    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nweighted.mean(x, w)\nWeighted mean or proportion, without uncertainty\n\n\nas_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)\nThe NHIS design object\n\n\nsurvey_mean(x, na.rm = TRUE, vartype = \"ci\")\nWeighted mean or proportion with a 95% CI\n\n\nsurvey_total(vartype = \"ci\")\nEstimated number of people, with a 95% CI\n\n\ngroup_by() on the design\nEstimates for each group\n\n\n\nThe rule: weights for the estimate; strata and PSUs for the uncertainty; always all three.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#next",
+    "href": "survey/n4-weights.html#next",
+    "title": "N4 · Why Weights Matter",
+    "section": "Next",
+    "text": "Next\nContinue with N5: Weighted Estimates: estimates for subgroups, why you filter the design and never the data, comparing socioeconomic groups, and plotting estimates with confidence intervals.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
     ]
   }
 ]
