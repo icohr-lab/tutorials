@@ -4,7 +4,7 @@ subtitle: "Self-paced lessons in data analysis for health research"
 toc: false
 ---
 
-Hands-on tutorials for students in the ICoHR lab and University of Idaho courses. No programming experience is needed: everyone starts with **R Foundations**, then continues with the tutorial that matches their project.
+Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with **R Foundations**, then continues with the tutorial that matches their project.
 
 ```{=html}
 <div class="tutorial-grid">
