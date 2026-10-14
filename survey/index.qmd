@@ -11,8 +11,8 @@ National surveys like the NHIS do not sample people at random from the whole pop
 
 | Lesson | Where | Covers | Status |
 |---|---|---|---|
-| N1: Meet the NHIS | Colab | Codebooks, loading the data, refused/don't-know codes | Planned |
-| N2: Preparing Variables | Colab | Recoding to `NA`, analysis variables, checking against the codebook | Planned |
+| [N1: Meet the NHIS](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N1_Meet_the_NHIS.ipynb) | Colab | Codebooks, loading the data, refused/don't-know codes | Ready |
+| [N2: Preparing Variables](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N2_Preparing_Variables.ipynb) | Colab | Recoding to `NA`, analysis variables, checking against the codebook | Ready |
 | N3: Moving to RStudio | RStudio | Installing R and RStudio, projects, scripts | Planned |
 | N4: Why Weights Matter | RStudio | Weighted vs. unweighted estimates, the survey design object | Planned |
 | N5: Weighted Estimates | RStudio | Percentages with confidence intervals, subgroups, plots | Planned |

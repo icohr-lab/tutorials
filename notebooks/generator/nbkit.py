@@ -6,6 +6,10 @@ RAW = "https://raw.githubusercontent.com/icohr-lab/aou-workshop/refs/heads/main/
 SITE = "https://icohr-lab.github.io/aou-workshop/"  # the AoU workshop site (Workbench setup)
 POLICY = "https://support.researchallofus.org/hc/en-us/articles/34814131370388"
 COLAB = "https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/"
+TUTORIALS = "https://icohr-lab.github.io/tutorials/"
+# NHIS teaching file; NB_NHIS_DATA can point at a local folder (ending in /) to test before pushing
+NHIS = os.environ.get("NB_NHIS_DATA", "https://raw.githubusercontent.com/icohr-lab/tutorials/refs/heads/main/data/nhis/")
+CODEBOOK = "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Dataset_Documentation/NHIS/2025/adult-codebook.pdf"
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Notebooks go to the folder above generator/ (notebooks/); test scripts to generator/tests/.
 # Override with NB_OUT / NB_TEST, e.g. to build into a scratch folder and compare.
@@ -30,8 +34,11 @@ FILES = {
     "B3": ("B3_Exploring_and_Plotting_with_AI", "Exploring and Plotting with AI"),
     "B4": ("B4_Catching_Mistakes", "Catching Mistakes"),
     "B5": ("B5_Statistics_with_AI", "Statistics with AI"),
+    "N1": ("N1_Meet_the_NHIS", "Meet the NHIS"),
+    "N2": ("N2_Preparing_Variables", "Preparing Variables"),
 }
-SERIES = {"F": ("Foundations", 6), "A": ("Path A: Write It Yourself", 6), "B": ("Path B: AI-Assisted", 5)}
+SERIES = {"F": ("Foundations", 6), "A": ("Path A: Write It Yourself", 6), "B": ("Path B: AI-Assisted", 5),
+          "N": ("R for Survey Data", 7)}
 
 
 def link(key):
@@ -40,7 +47,8 @@ def link(key):
 
 
 def sub(t):
-    return (t.replace("RAW_", RAW).replace("SITE_", SITE).replace("POLICY_", POLICY)).strip("\n")
+    return (t.replace("NHIS_DATA_", NHIS).replace("RAW_", RAW).replace("SITE_", SITE)
+            .replace("POLICY_", POLICY)).strip("\n")
 
 
 class NB:
@@ -52,12 +60,13 @@ class NB:
         fname, title = FILES[key]
         series, total = SERIES[key[0]]
         num = int(key[1:])
+        unit = "lesson" if key[0] == "N" else "notebook"  # the survey series mixes notebooks and RStudio lessons
         bullets = "\n".join(f"- {b}" for b in learn)
         need = f"\n\n**Before this notebook:** {needs}." if needs else ""
         self.md(f"""
 # {key} · {title}
 
-*{series}, notebook {num} of {total} · about {minutes} minutes*
+*{series}, {unit} {num} of {total} · about {minutes} minutes*
 
 **In this notebook you will learn to:**
 

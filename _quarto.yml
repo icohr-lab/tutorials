@@ -80,6 +80,12 @@ website:
       contents:
         - text: "Overview"
           href: survey/index.qmd
+        - section: "Lessons (Colab)"
+          contents:
+            - text: "N1: Meet the NHIS"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N1_Meet_the_NHIS.ipynb
+            - text: "N2: Preparing Variables"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N2_Preparing_Variables.ipynb
 
 format:
   html:

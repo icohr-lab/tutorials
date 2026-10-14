@@ -40,6 +40,15 @@ Students describe what they want to an AI chat assistant, then read and check th
 | [B4: Catching Mistakes](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B4_Catching_Mistakes.ipynb) | Debugging errors with AI; four mistakes that run without an error |
 | [B5: Statistics with AI](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B5_Statistics_with_AI.ipynb) | Choosing the test, reading output, odds ratios, moving to the Workbench |
 
+## R for Survey Data (NHIS)
+
+Uses the NHIS 2025 teaching file in `data/nhis/`. Later lessons (N3 to N7) are RStudio lessons on the website.
+
+| Notebook | Covers |
+|---|---|
+| [N1: Meet the NHIS](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N1_Meet_the_NHIS.ipynb) | The survey, codebooks, special codes, universes, income |
+| [N2: Preparing Variables](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/N2_Preparing_Variables.ipynb) | Special codes to `NA`, analysis variables, checking recodes, `factor()` |
+
 ## For students
 
 1. Click a notebook link above.
@@ -49,7 +58,7 @@ Students describe what they want to an AI chat assistant, then read and check th
 ## Notes for instructors
 
 - The links above, and the "Next" links inside the notebooks, assume the files are in a folder called `notebooks` on the `main` branch of this repository.
-- The data are read from the `data` folder of this repository. No real participant data are used.
+- The AoU notebooks read simulated data from the `data` folder of the `icohr-lab/aou-workshop` repository; no real participant data are used. The NHIS notebooks read `data/nhis/` in this repository, a subset of the public-use NCHS file.
 - Every exercise has a solution at the end of its notebook.
-- Some cells fail on purpose (in F1, F2, and B4), and in A2, A3, and B2 a few cells depend on an exercise being completed first. **Runtime > Run all** therefore stops partway in those notebooks.
+- Some cells fail on purpose (in F1, F2, and B4), and in A2, A3, B2, and N2 a few cells depend on an exercise being completed first. **Runtime > Run all** therefore stops partway in those notebooks.
 - Path B asks students to use an AI chat tool in a separate window. Tell them which tool to use.
