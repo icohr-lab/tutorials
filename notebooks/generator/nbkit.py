@@ -1,6 +1,7 @@
 """Small toolkit for writing the notebook series and its R test scripts."""
 import json
 import os
+import re
 
 RAW = "https://raw.githubusercontent.com/icohr-lab/aou-workshop/refs/heads/main/data/"
 SITE = "https://icohr-lab.github.io/aou-workshop/"  # the AoU workshop site (Workbench setup)
@@ -46,6 +47,20 @@ def link(key):
     return f"[{key}: {title}]({COLAB}{fname}.ipynb)"
 
 
+def split_at_headings(text):
+    """Split markdown so each heading starts a new chunk; ignores '#' lines inside ``` code blocks.
+    A chunk holding only a '---' rule stays attached to the heading after it."""
+    chunks, in_fence = [[]], False
+    for line in text.split("\n"):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+        is_heading = not in_fence and re.match(r"#{1,6} ", line)
+        if is_heading and any(l.strip() not in ("", "---") for l in chunks[-1]):
+            chunks.append([])
+        chunks[-1].append(line)
+    return [c for c in ("\n".join(lines).strip("\n") for lines in chunks) if c.strip()]
+
+
 def sub(t):
     return (t.replace("NHIS_DATA_", NHIS).replace("RAW_", RAW).replace("SITE_", SITE)
             .replace("POLICY_", POLICY)).strip("\n")
@@ -77,7 +92,9 @@ class NB:
 
     # -- basic cells
     def md(self, text):
-        self.cells.append(dict(kind="markdown", text=sub(text), solution=None, error=False))
+        # One heading per cell: Colab's table of contents only lists a cell's first heading
+        for chunk in split_at_headings(sub(text)):
+            self.cells.append(dict(kind="markdown", text=chunk, solution=None, error=False))
 
     def code(self, text, error=False, solution=None):
         self.cells.append(dict(kind="code", text=sub(text), solution=sub(solution) if solution else None, error=error))
