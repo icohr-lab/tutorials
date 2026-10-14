@@ -1,0 +1,16 @@
+.DS_Store
+.Rhistory
+.RData
+.Rproj.user
+
+/.quarto/
+/_site/
+/_site-*/
+**/*.quarto_ipynb
+
+# Notebook generator test output
+notebooks/generator/tests/
+__pycache__/
+
+# Private working notes
+RESUME-NOTES.md

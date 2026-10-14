@@ -1,0 +1,91 @@
+project:
+  type: website
+  render:
+    - "*.qmd"
+    - "!notebooks/"
+
+website:
+  title: "Tutorials"
+  site-url: https://icohr-lab.github.io/tutorials/
+  repo-url: https://github.com/icohr-lab/tutorials
+  search: true
+  page-navigation: true
+  navbar:
+    left:
+      - text: "R Foundations"
+        href: foundations/index.qmd
+      - text: "R for All of Us"
+        href: aou/index.qmd
+      - text: "R for Survey Data"
+        href: survey/index.qmd
+    right:
+      - icon: github
+        href: https://github.com/icohr-lab/tutorials
+  sidebar:
+    - id: foundations
+      title: "R Foundations"
+      style: docked
+      contents:
+        - text: "Overview"
+          href: foundations/index.qmd
+        - section: "Notebooks (Colab)"
+          contents:
+            - text: "F1: First Steps in R"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F1_First_Steps.ipynb
+            - text: "F2: Vectors and Data Types"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F2_Vectors_and_Data_Types.ipynb
+            - text: "F3: Dataframes"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F3_Dataframes.ipynb
+            - text: "F4: Choosing Rows and Columns"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F4_Choosing_Rows_and_Columns.ipynb
+            - text: "F5: New Columns and Data Files"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F5_New_Columns_and_Data_Files.ipynb
+            - text: "F6: Combining Tables"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F6_Combining_Tables.ipynb
+    - id: aou
+      title: "R for All of Us"
+      style: docked
+      contents:
+        - text: "Overview"
+          href: aou/index.qmd
+        - section: "Path A: Write It Yourself"
+          contents:
+            - text: "A1: Cleaning Real Data"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A1_Cleaning_Real_Data.ipynb
+            - text: "A2: One Row per Person"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A2_One_Row_per_Person.ipynb
+            - text: "A3: Dates and New Variables"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A3_Dates_and_New_Variables.ipynb
+            - text: "A4: Exploring and Plotting"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A4_Exploring_and_Plotting.ipynb
+            - text: "A5: Statistical Tests"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A5_Statistical_Tests.ipynb
+            - text: "A6: Regression"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A6_Regression.ipynb
+        - section: "Path B: AI-Assisted"
+          contents:
+            - text: "B1: Your First Prompts"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B1_First_Prompts.ipynb
+            - text: "B2: Building a Dataset with AI"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B2_Building_a_Dataset_with_AI.ipynb
+            - text: "B3: Exploring and Plotting with AI"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B3_Exploring_and_Plotting_with_AI.ipynb
+            - text: "B4: Catching Mistakes"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B4_Catching_Mistakes.ipynb
+            - text: "B5: Statistics with AI"
+              href: https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B5_Statistics_with_AI.ipynb
+    - id: survey
+      title: "R for Survey Data"
+      style: docked
+      contents:
+        - text: "Overview"
+          href: survey/index.qmd
+
+format:
+  html:
+    theme: [cosmo, styles/palette.scss, styles/theme.scss]
+    toc: true
+    toc-location: right
+    toc-title: "On this page"
+    code-copy: true
+    link-external-newwindow: true

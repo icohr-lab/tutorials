@@ -1,0 +1,27 @@
+---
+title: "R for *All of Us*"
+subtitle: "Clean, combine, and analyze EHR-style data"
+---
+
+These notebooks continue from [R Foundations](../foundations/index.qmd) using simulated data laid out like *All of Us* Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.
+
+## Path A: Write It Yourself
+
+| Notebook | Covers |
+|---|---|
+| [A1: Cleaning Real Data](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A1_Cleaning_Real_Data.ipynb) | Recoding categories with `if_else()` and `case_when()` |
+| [A2: One Row per Person](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A2_One_Row_per_Person.ipynb) | Earliest record per person, merging three tables, long to wide |
+| [A3: Dates and New Variables](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A3_Dates_and_New_Variables.ipynb) | Date logic, exposure before diagnosis, analysis variables, saving |
+| [A4: Exploring and Plotting](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A4_Exploring_and_Plotting.ipynb) | Group summaries, histogram, box plot, scatter plot |
+| [A5: Statistical Tests](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A5_Statistical_Tests.ipynb) | t-test, ANOVA, chi-square, Fisher's exact test |
+| [A6: Regression](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/A6_Regression.ipynb) | Linear and logistic regression, odds ratios |
+
+## Path B: AI-Assisted
+
+| Notebook | Covers |
+|---|---|
+| [B1: Your First Prompts](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B1_First_Prompts.ipynb) | The describe-generate-read-run-check loop; what may be shared with an AI tool |
+| [B2: Building a Dataset with AI](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B2_Building_a_Dataset_with_AI.ipynb) | Prompting for one row per person, merging, date logic; test cases |
+| [B3: Exploring and Plotting with AI](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B3_Exploring_and_Plotting_with_AI.ipynb) | Summaries and plots by prompt; checking a plot against numbers |
+| [B4: Catching Mistakes](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B4_Catching_Mistakes.ipynb) | Debugging errors with AI; four mistakes that run without an error |
+| [B5: Statistics with AI](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/B5_Statistics_with_AI.ipynb) | Choosing the test, reading output, odds ratios, moving to the Workbench |

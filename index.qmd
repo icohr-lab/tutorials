@@ -1,0 +1,38 @@
+---
+title: "Tutorials"
+subtitle: "Self-paced lessons in data analysis for health research"
+toc: false
+---
+
+Hands-on tutorials for students in the ICoHR lab and University of Idaho courses. No programming experience is needed: everyone starts with **R Foundations**, then continues with the tutorial that matches their project.
+
+```{=html}
+<div class="tutorial-grid">
+<a class="tutorial-btn" href="foundations/index.html">
+<span class="name">R Foundations</span>
+<span class="desc">First steps in R: data types, dataframes, choosing rows and columns, joins. Start here.</span>
+<span class="meta">6 notebooks · Colab</span>
+</a>
+<a class="tutorial-btn" href="aou/index.html">
+<span class="name">R for <em>All of Us</em></span>
+<span class="desc">Clean, combine, and analyze EHR-style data. Write the code yourself or with an AI assistant.</span>
+<span class="meta">11 notebooks · Colab</span>
+</a>
+<a class="tutorial-btn" href="survey/index.html">
+<span class="name">R for Survey Data</span>
+<span class="desc">Analyze the National Health Interview Survey: weights, design-based estimates, and regression.</span>
+<span class="meta">7 lessons · Colab, then RStudio</span>
+</a>
+<div class="tutorial-btn coming">
+<span class="name">Machine Learning with Python</span>
+<span class="desc">Planned.</span>
+<span class="meta">Coming later</span>
+</div>
+</div>
+```
+
+## How the tutorials work
+
+- **Start in your browser.** Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.
+- **Move to RStudio for projects.** Later lessons are run in RStudio on your own computer, where your files and packages stay put.
+- **Learn by doing.** Every lesson has exercises with expected results, and solutions at the end.

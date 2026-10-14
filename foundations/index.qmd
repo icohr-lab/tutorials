@@ -1,0 +1,29 @@
+---
+title: "R Foundations"
+subtitle: "Six notebooks for absolute beginners"
+---
+
+A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.
+
+## How to use the notebooks
+
+1. Click a notebook link below.
+2. Sign in with a Google account.
+3. Choose **File > Save a copy in Drive** and work in your copy. If you skip this step, your work is lost when you close the tab.
+4. Run the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.
+
+## Notebooks
+
+| Notebook | Covers |
+|---|---|
+| [F1: First Steps in R](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F1_First_Steps.ipynb) | Running code, arithmetic, variables, functions, reading error messages |
+| [F2: Vectors and Data Types](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F2_Vectors_and_Data_Types.ipynb) | Vectors, numbers vs. text, TRUE/FALSE, dates, missing values |
+| [F3: Dataframes](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F3_Dataframes.ipynb) | Building and inspecting a table; one row per person or many |
+| [F4: Choosing Rows and Columns](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F4_Choosing_Rows_and_Columns.ipynb) | Packages, `select()`, `filter()`, the pipe |
+| [F5: New Columns and Data Files](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F5_New_Columns_and_Data_Files.ipynb) | `mutate()`, `if_else()`, reading a CSV file, exploring a new dataset |
+| [F6: Combining Tables](https://colab.research.google.com/github/icohr-lab/tutorials/blob/main/notebooks/F6_Combining_Tables.ipynb) | Inner and left joins, missing values from joins, duplicated rows |
+
+## Where next
+
+- Working with *All of Us* data? Continue with [R for *All of Us*](../aou/index.qmd).
+- Working with national survey data? Continue with [R for Survey Data](../survey/index.qmd).
