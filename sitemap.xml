@@ -1,35 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://icohr-lab.github.io/tutorials/survey/n6-regression.html</loc>
-    <lastmod>2026-10-14T19:48:07.382Z</lastmod>
+    <loc>https://icohr-lab.github.io/tutorials/survey/n7-project.html</loc>
+    <lastmod>2026-10-14T19:54:07.026Z</lastmod>
   </url>
   <url>
-    <loc>https://icohr-lab.github.io/tutorials/survey/n4-weights.html</loc>
-    <lastmod>2026-10-14T19:34:32.367Z</lastmod>
-  </url>
-  <url>
-    <loc>https://icohr-lab.github.io/tutorials/survey/index.html</loc>
+    <loc>https://icohr-lab.github.io/tutorials/survey/n5-estimates.html</loc>
     <lastmod>2026-10-14T19:47:47.606Z</lastmod>
-  </url>
-  <url>
-    <loc>https://icohr-lab.github.io/tutorials/foundations/index.html</loc>
-    <lastmod>2026-10-14T06:13:42.762Z</lastmod>
-  </url>
-  <url>
-    <loc>https://icohr-lab.github.io/tutorials/aou/index.html</loc>
-    <lastmod>2026-10-14T06:13:42.759Z</lastmod>
-  </url>
-  <url>
-    <loc>https://icohr-lab.github.io/tutorials/index.html</loc>
-    <lastmod>2026-10-14T16:32:51.214Z</lastmod>
   </url>
   <url>
     <loc>https://icohr-lab.github.io/tutorials/survey/n3-rstudio.html</loc>
     <lastmod>2026-10-14T19:26:40.679Z</lastmod>
   </url>
   <url>
-    <loc>https://icohr-lab.github.io/tutorials/survey/n5-estimates.html</loc>
-    <lastmod>2026-10-14T19:47:47.606Z</lastmod>
+    <loc>https://icohr-lab.github.io/tutorials/index.html</loc>
+    <lastmod>2026-10-14T16:32:51.214Z</lastmod>
+  </url>
+  <url>
+    <loc>https://icohr-lab.github.io/tutorials/aou/index.html</loc>
+    <lastmod>2026-10-14T06:13:42.759Z</lastmod>
+  </url>
+  <url>
+    <loc>https://icohr-lab.github.io/tutorials/foundations/index.html</loc>
+    <lastmod>2026-10-14T06:13:42.762Z</lastmod>
+  </url>
+  <url>
+    <loc>https://icohr-lab.github.io/tutorials/survey/index.html</loc>
+    <lastmod>2026-10-14T19:54:07.027Z</lastmod>
+  </url>
+  <url>
+    <loc>https://icohr-lab.github.io/tutorials/survey/n4-weights.html</loc>
+    <lastmod>2026-10-14T19:34:32.367Z</lastmod>
+  </url>
+  <url>
+    <loc>https://icohr-lab.github.io/tutorials/survey/n6-regression.html</loc>
+    <lastmod>2026-10-14T19:54:07.027Z</lastmod>
   </url>
 </urlset>

@@ -1,134 +1,475 @@
 [
   {
-    "objectID": "survey/n6-regression.html",
-    "href": "survey/n6-regression.html",
-    "title": "N6 · Tests and Regression",
+    "objectID": "survey/n7-project.html",
+    "href": "survey/n7-project.html",
+    "title": "N7 · Your Own Project",
     "section": "",
-    "text": "In this lesson you will learn to:\nBefore this lesson: N5: Weighted Estimates. Work in n6.R in your starter project.",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N6: Tests and Regression. Work in n7.R in your starter project.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#setup",
-    "href": "survey/n6-regression.html#setup",
-    "title": "N6 · Tests and Regression",
+    "objectID": "survey/n7-project.html#setup",
+    "href": "survey/n7-project.html#setup",
+    "title": "N7 · Your Own Project",
     "section": "1. Setup",
-    "text": "1. Setup\nThis lesson uses functions from the survey package directly, and broom (installed with the tidyverse) to tidy model results.\n\nlibrary(tidyverse)\nlibrary(srvyr)\nlibrary(survey)\nlibrary(broom)\n\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)\n\nsurvivors &lt;- nhis_design %&gt;% filter(survivor == 1)\n\nsurvivors is the design filtered to cancer survivors (the right way, from N5). Everything in this lesson uses it.",
+    "text": "1. Setup\nThis lesson uses a helper file, nchs_reliability.R. If your starter project does not have it (it was added after the project was first released), download the starter project again and copy nchs_reliability.R into your project folder.\n\nlibrary(tidyverse)\nlibrary(srvyr)\n\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\nsource(\"nchs_reliability.R\")\n\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)\n\nsurvivors &lt;- nhis_design %&gt;% filter(survivor == 1)\n\nsource() runs another script, here one that defines a function you will use in section 4.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#testing-an-association-the-design-based-chi-square-test",
-    "href": "survey/n6-regression.html#testing-an-association-the-design-based-chi-square-test",
-    "title": "N6 · Tests and Regression",
-    "section": "2. Testing an association: the design-based chi-square test",
-    "text": "2. Testing an association: the design-based chi-square test\nIn N5 you saw that fair or poor health is much more common among survivors with lower incomes. Could a difference that large arise by chance in a sample this size? A chi-square test answers that for two categorical variables.\nThe ordinary chisq.test() assumes a simple random sample. svychisq() from the survey package uses the Rao-Scott correction, which accounts for weights, strata, and PSUs. It takes a formula naming the two variables, and the design.\n\nsvychisq(~ fair_poor + poverty, design = survivors)\n\n\n    Pearson's X^2: Rao & Scott adjustment\n\ndata:  NextMethod()\nF = 50.493, ndf = 2.9877, ddf = 1640.2560, p-value &lt; 2.2e-16\n\n\nHow to read it:\n\nF is the test statistic. Larger means stronger evidence of an association.\np-value: the probability of an association at least this strong if there really were none in the population. &lt; 2.2e-16 is R’s way of saying “smaller than the smallest number it shows”, so report it as p &lt; 0.001.\n\nThere is very strong evidence that self-rated health is associated with income among U.S. adult cancer survivors.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nTest whether fair or poor health is associated with education among survivors, and then with sex. What do you conclude for each?\nExpected result: education F = 58.1, p &lt; 0.001 (strong evidence of an association); sex F = 0.47, p = 0.49 (no evidence of an association).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsvychisq(~ fair_poor + education, design = survivors)\n\n\n    Pearson's X^2: Rao & Scott adjustment\n\ndata:  NextMethod()\nF = 58.11, ndf = 1.9806, ddf = 1087.3240, p-value &lt; 2.2e-16\n\nsvychisq(~ fair_poor + sex, design = survivors)\n\n\n    Pearson's X^2: Rao & Scott adjustment\n\ndata:  NextMethod()\nF = 0.47132, ndf = 1, ddf = 549, p-value = 0.4927\n\n\nA large p-value does not prove that men and women have the same rate. It means this sample gives no evidence of a difference.",
+    "objectID": "survey/n7-project.html#organizing-a-project",
+    "href": "survey/n7-project.html#organizing-a-project",
+    "title": "N7 · Your Own Project",
+    "section": "2. Organizing a project",
+    "text": "2. Organizing a project\nThe starter project has served as a small version of a real analysis. For your own project, use the same structure, and a little more of it:\nmy-project/\n├── my-project.Rproj\n├── README.txt            what the project is, and the order to run the scripts\n├── data/\n│   ├── raw/              files exactly as downloaded; never edited\n│   └── derived/          files your scripts create (such as analysis.rds)\n├── 01_prepare.R          raw data -&gt; analysis file\n├── 02_describe.R         Table 1 and descriptive estimates\n├── 03_models.R           tests and regression\n└── output/               tables and figures your scripts save\nThree habits matter more than the exact layout:\n\nNever edit raw data by hand. Every change is made by code, so it can be checked and repeated.\nNumber the scripts in the order they run. Each one starts with its own library() and readRDS() lines, as yours have since N3.\nPass the fresh-start test often (N3): Session &gt; Restart R, then run the scripts in order. If they run, anyone can reproduce your results, including you in six months.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#why-regression",
-    "href": "survey/n6-regression.html#why-regression",
-    "title": "N6 · Tests and Regression",
-    "section": "3. Why regression?",
-    "text": "3. Why regression?\nIncome and education go together: people with more education tend to have higher incomes. So is the income gradient really about income, or partly about education? Regression estimates the association of each variable with the outcome while holding the others constant. This is called adjusting for them.\nThe outcome, fair_poor, is 0 or 1, so the model is logistic regression. Its results are odds ratios.\n\nOdds and odds ratios\nIf 25% of a group report fair or poor health, their odds are 25 to 75, or 0.33. An odds ratio (OR) compares the odds in two groups:\n\nOR = 1: same odds\nOR = 2: twice the odds\nOR = 0.5: half the odds\n\nEvery OR compares a group with a reference group. By default, R uses the first category of a factor. For poverty, that is “Below 100%”, which would give odds ratios below 1 for the other groups. Results are usually easier to read when the reference is the most advantaged group, so that every OR describes how much higher the odds are in a less advantaged group. fct_relevel() moves a category to the front.\n\nsurvivors &lt;- survivors %&gt;%\n  mutate(\n    poverty = fct_relevel(poverty, \"400% or more\"),\n    education = fct_relevel(education, \"Bachelor or higher\")\n  )",
+    "objectID": "survey/n7-project.html#table-1-who-are-the-survivors",
+    "href": "survey/n7-project.html#table-1-who-are-the-survivors",
+    "title": "N7 · Your Own Project",
+    "section": "3. Table 1: who are the survivors?",
+    "text": "3. Table 1: who are the survivors?\nMost papers begin with a table describing the study population. For survey data, each row shows the unweighted number of people in the sample and the weighted percent in the population.\nsurvey_prop() estimates the percent of the population in each category of a group_by() variable.\n\nsurvivors %&gt;%\n  filter(!is.na(poverty)) %&gt;%\n  group_by(poverty) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    percent = survey_prop(vartype = \"ci\", proportion = TRUE)\n  ) %&gt;%\n  mutate(across(starts_with(\"percent\"), ~ 100 * .x))\n\n# A tibble: 4 × 5\n  poverty          n percent percent_low percent_upp\n  &lt;fct&gt;        &lt;int&gt;   &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;\n1 Below 100%     206   7.554       6.346       8.970\n2 100-199%       496  15.82       14.23       17.55 \n3 200-399%       891  30.62       28.51       32.81 \n4 400% or more  1240  46.01       43.53       48.50 \n\n\nRead it as: 206 survivors in the sample had family income below the poverty line, and they represent 7.6% of U.S. adult cancer survivors (95% CI 6.3% to 9.0%). proportion = TRUE gives confidence intervals designed for proportions, which stay between 0% and 100%.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nMake the same table for age_group and for sex.\nExpected result: age 18-44 9.2%, 45-64 29.7%, 65+ 61.1%; female 57.5%, male 42.5%.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsurvivors %&gt;%\n  filter(!is.na(age_group)) %&gt;%\n  group_by(age_group) %&gt;%\n  summarize(n = unweighted(n()), percent = survey_prop(vartype = \"ci\", proportion = TRUE)) %&gt;%\n  mutate(across(starts_with(\"percent\"), ~ 100 * .x))\n\n# A tibble: 3 × 5\n  age_group     n percent percent_low percent_upp\n  &lt;chr&gt;     &lt;int&gt;   &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;\n1 18-44       159   9.242       7.755       10.98\n2 45-64       647  29.71       27.68        31.81\n3 65+        2025  61.05       58.77        63.28\n\nsurvivors %&gt;%\n  filter(!is.na(sex)) %&gt;%\n  group_by(sex) %&gt;%\n  summarize(n = unweighted(n()), percent = survey_prop(vartype = \"ci\", proportion = TRUE)) %&gt;%\n  mutate(across(starts_with(\"percent\"), ~ 100 * .x))\n\n# A tibble: 2 × 5\n  sex        n percent percent_low percent_upp\n  &lt;chr&gt;  &lt;int&gt;   &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;\n1 Female  1669   57.48       55.29       59.64\n2 Male    1162   42.52       40.36       44.71\n\n\nMost U.S. adult cancer survivors are 65 or older, which is why age belongs in every model of survivors’ health.\n\n\n\nA finished Table 1 stacks these blocks, one per variable, usually formatted as “n (weighted %)”. Copying numbers into a word processor by hand invites errors; when you are ready, packages such as gtsummary can build the whole table from the design object.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#a-first-model-income-alone",
-    "href": "survey/n6-regression.html#a-first-model-income-alone",
-    "title": "N6 · Tests and Regression",
-    "section": "4. A first model: income alone",
-    "text": "4. A first model: income alone\nsvyglm() fits regression models on a survey design. It looks like glm(), with two differences: the data go in design =, and the family is quasibinomial(). (binomial() gives the same estimates but prints warnings about non-whole-number weights; quasibinomial() avoids them.)\n\nmodel_crude &lt;- svyglm(fair_poor ~ poverty, design = survivors, family = quasibinomial())\n\ntidy(model_crude, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 4 × 5\n  term              estimate conf.low conf.high   p.value\n  &lt;chr&gt;                &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;\n1 (Intercept)         0.2028   0.1695    0.2427 1.547e-54\n2 povertyBelow 100%   6.698    4.555     9.849  1.347e-20\n3 poverty100-199%     3.824    2.882     5.076  3.125e-19\n4 poverty200-399%     1.865    1.433     2.427  4.206e- 6\n\n\ntidy() from broom turns the model into a table. exponentiate = TRUE converts the model’s coefficients into odds ratios, and conf.int = TRUE adds 95% confidence intervals (conf.low, conf.high). select() keeps just the columns you need to read.\nRead the estimate column. Compared with survivors whose family income is at least four times the poverty line, the odds of fair or poor health are about 1.9 times as high at 200-399%, 3.8 times as high at 100-199%, and 6.7 times as high below the poverty line. (Ignore the intercept row; it is the odds in the reference group, not a comparison.)\nThis is a crude (unadjusted) model: income alone.",
+    "objectID": "survey/n7-project.html#when-is-an-estimate-reliable-enough-to-publish",
+    "href": "survey/n7-project.html#when-is-an-estimate-reliable-enough-to-publish",
+    "title": "N7 · Your Own Project",
+    "section": "4. When is an estimate reliable enough to publish?",
+    "text": "4. When is an estimate reliable enough to publish?\nIn N5, the estimate for uninsured survivors had a confidence interval from about 12% to 46%. You could see it was useless, but “you could see it” is not a rule. NCHS has formal rules, the NCHS Data Presentation Standards for Proportions. In short, for an estimated percent:\n\n\n\n\n\n\n\nCheck\nResult\n\n\n\n\nSample size or effective sample size below 30\nSuppress\n\n\n95% CI (Korn-Graubard method) 30 percentage points wide or more\nSuppress\n\n\nCI between 5 and 30 points wide, and relative width above 130%\nSuppress\n\n\nEstimate of exactly 0% or 100%, or fewer than 8 degrees of freedom\nFlag for review\n\n\nOtherwise\nPresent\n\n\n\nTwo new terms:\n\nEffective sample size: the sample size divided by the design effect. Clustering makes a survey sample less informative than a simple random sample of the same size; the design effect measures by how much. For estimating fair or poor health, the 206 survivors below the poverty line carry about as much information as 132 people sampled completely at random. (The design effect differs from one estimate to another, so it is calculated for each.)\nRelative CI width: the width of the interval divided by the estimate. A 10-point-wide interval is fine around 50%, but not around 5%.\n\ncheck_proportion() from nchs_reliability.R applies all of these rules. Give it a design (already filtered to your subgroup), a 0/1 variable, and optionally a grouping variable.\n\ncheck_proportion(survivors, fair_poor, poverty)\n\n# A tibble: 4 × 10\n  poverty          n n_eff percent ci_low ci_high ci_width rel_width    df verdict\n  &lt;chr&gt;        &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;  \n1 Below 100%     206 132.2    57.6   48.6    66.2     17.6        30   116 Present\n2 100-199%       495 313      43.7   38.1    49.4     11.3        26   273 Present\n3 200-399%       891 574      27.4   23.8    31.3      7.5        27   398 Present\n4 400% or more  1239 854.2    16.9   14.4    19.5      5.1        31   448 Present\n\n\nAll four estimates from N5 pass. (The confidence limits differ slightly from N5’s because the standards require the Korn-Graubard method.)\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nCheck the estimates of fair or poor health for insured and uninsured survivors.\nExpected result: insured survivors: Present. Uninsured survivors: Suppress, because the effective sample size (29.6) is below 30.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ncheck_proportion(survivors, fair_poor, insured)\n\n# A tibble: 2 × 10\n  insured     n  n_eff percent ci_low ci_high ci_width rel_width    df verdict                       \n  &lt;chr&gt;   &lt;int&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;                         \n1 No         44   29.6    29     12.9    50.1     37.2       129    14 Suppress: sample size below 30\n2 Yes      2783 1746.     27.4   25.3    29.6      4.2        16   548 Present                       \n\n\nNotice that the share of survivors who are uninsured (2.2% in a Table 1) can be perfectly reliable, while the health of uninsured survivors cannot: the first uses all 2,800 survivors, the second only 44.\n\n\n\n\nSmall subgroups\nThe rules matter most when you cut the data finely. Here is fair or poor health by income among survivors aged 18 to 44.\n\nsurvivors %&gt;%\n  filter(age_group == \"18-44\") %&gt;%\n  check_proportion(fair_poor, poverty)\n\n# A tibble: 4 × 10\n  poverty          n n_eff percent ci_low ci_high ci_width rel_width    df verdict                               \n  &lt;chr&gt;        &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;                                 \n1 Below 100%      13  11.2    33.7    0     100      100         297     1 Suppress: sample size below 30        \n2 100-199%        27  21.9    61.4   32      85.7     53.7        88     5 Suppress: sample size below 30        \n3 200-399%        39  33.8    21.5    8.3    41.1     32.8       152    11 Suppress: CI width 0.30 or more       \n4 400% or more    80  46.5    16.6    7.1    30.8     23.6       142    40 Suppress: relative CI width above 130%\n\n\nAll four are suppressed, each for a different reason. With 159 young survivors in the whole sample, splitting them four ways leaves too few in each group.\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nCombine income into two groups, “Below 200%” and “200% or more”, and check again for survivors aged 18 to 44. Hint: create the new variable with mutate() and if_else() on the design, then use it as the group.\nExpected result: 200% or more: 18.3%, Present. Below 200%: still suppressed (CI 40 points wide).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsurvivors %&gt;%\n  filter(age_group == \"18-44\") %&gt;%\n  mutate(income2 = if_else(poverty %in% c(\"Below 100%\", \"100-199%\"), \"Below 200%\", \"200% or more\")) %&gt;%\n  check_proportion(fair_poor, income2)\n\n# A tibble: 2 × 10\n  income2          n n_eff percent ci_low ci_high ci_width rel_width    df verdict                        \n  &lt;chr&gt;        &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;                          \n1 200% or more   119  85.7    18.3   10.7    28.3     17.6        96    65 Present                        \n2 Below 200%      40  30.1    53.6   33.2    73.2     40          75    14 Suppress: CI width 0.30 or more\n\n\nCombining categories helped one group but not the other. The usual remaining options are to pool several years of NHIS data (which needs adjusted weights; see the NCHS survey description) or to change the question, for example by studying all survivors and adjusting for age instead of reporting age-specific estimates.\n\n\n\nIn a table, a suppressed estimate is usually replaced by an asterisk with a footnote such as: “Estimate does not meet NCHS standards of reliability.”",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#adjusting-for-other-variables",
-    "href": "survey/n6-regression.html#adjusting-for-other-variables",
-    "title": "N6 · Tests and Regression",
-    "section": "5. Adjusting for other variables",
-    "text": "5. Adjusting for other variables\nAdd education, age group, and sex to the formula with +.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nFit model_adjusted: fair_poor explained by poverty, education, age_group, and sex. Show its odds ratios with tidy(). How does the odds ratio for “Below 100%” change compared with the crude model?\nExpected result: the odds ratio for income below the poverty line falls from 6.7 (95% CI 4.6 to 9.8) to 4.7 (3.1 to 7.2). It is smaller, but still large.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmodel_adjusted &lt;- svyglm(fair_poor ~ poverty + education + age_group + sex,\n                         design = survivors, family = quasibinomial())\n\ntidy(model_adjusted, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 9 × 5\n  term                         estimate conf.low conf.high   p.value\n  &lt;chr&gt;                           &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;\n1 (Intercept)                    0.1181  0.07101    0.1963 1.160e-15\n2 povertyBelow 100%              4.717   3.098      7.181  1.461e-12\n3 poverty100-199%                2.959   2.170      4.035  1.786e-11\n4 poverty200-399%                1.545   1.171      2.039  2.153e- 3\n5 educationHigh school or less   2.533   1.912      3.355  1.946e-10\n6 educationSome college          1.757   1.341      2.304  4.914e- 5\n7 age_group45-64                 1.118   0.6721     1.860  6.670e- 1\n8 age_group65+                   1.056   0.6435     1.733  8.287e- 1\n9 sexMale                        1.212   0.9740     1.508  8.466e- 2\n\n\n\n\n\nHow to read the adjusted model:\n\nIncome: among survivors with the same education, age group, and sex, those below the poverty line have about 4.7 times the odds of fair or poor health of those at 400% or more. Part of the crude association was education; most of it remains.\nEducation: with income held constant, survivors with a high school education or less have about 2.5 times the odds of those with a bachelor’s degree. Income and education each matter.\nAge group and sex: the confidence intervals include 1, so there is no clear evidence that either is associated with fair or poor health once income and education are accounted for.\n\nThe model used 2818 survivors: people with a missing value in any variable in the formula are left out automatically.\n\n\n\n\n\n\nWarningOdds ratios are not risk ratios\n\n\n\nAn odds ratio of 4.7 does not mean “4.7 times as likely”. When an outcome is common (here more than one survivor in four), odds ratios are noticeably larger than ratios of percentages. In N5, the percentages were 57.6% and 16.9%, a ratio of about 3.4. Say “odds”, not “likelihood” or “risk”, when you report odds ratios.",
+    "objectID": "survey/n7-project.html#writing-the-methods",
+    "href": "survey/n7-project.html#writing-the-methods",
+    "title": "N7 · Your Own Project",
+    "section": "5. Writing the methods",
+    "text": "5. Writing the methods\nA methods section for an NHIS analysis tells readers exactly what you did, so they can judge it and repeat it. It should cover:\n\nData: survey, year, file, and source\nStudy population and definitions, including anything you excluded\nVariables: how the outcome and main variables were defined from the original codes\nStatistical methods: weights, variance estimation, the tests and models, and software\nReliability: how unreliable estimates were handled\n\nYour scripts already contain most of this. Here is a draft for the project in these lessons:\n\nData. We used the 2025 National Health Interview Survey (NHIS) Sample Adult public-use file, an annual, nationally representative household survey of the U.S. civilian noninstitutionalized population conducted by the National Center for Health Statistics (NCHS).\nStudy population. Cancer survivors were adults who reported ever being told by a doctor or other health professional that they had cancer, excluding those whose only reported cancer was non-melanoma skin cancer (n = 2,833).\nMeasures. The outcome was fair or poor self-rated health (versus excellent, very good, or good). Family income was the ratio of family income to the federal poverty threshold, using NCHS’s imputed values where income was not reported, categorized as below 100%, 100–199%, 200–399%, and 400% or more. Education was categorized as high school or less, some college, and bachelor’s degree or higher. Responses of refused, not ascertained, or don’t know were treated as missing.\nStatistical analysis. All estimates used the sample adult weights, and variances were estimated by Taylor series linearization using the NHIS public-use strata and primary sampling units. Subgroup estimates used the full sample (domain estimation). Associations were tested with Rao-Scott adjusted chi-square tests, and adjusted odds ratios were estimated with survey-weighted logistic regression including income, education, age group, and sex. Estimates were evaluated against the NCHS Data Presentation Standards for Proportions, and estimates not meeting them were suppressed. Analyses used R (version 4.5.2) with the survey (4.5) and srvyr (1.3.1) packages.\n\nTaylor series linearization is the method the survey package uses by default with as_survey_design(ids = , strata = ). Fill in your own versions with:\n\nR.version.string\n\n[1] \"R version 4.5.2 (2025-10-31)\"\n\npackageVersion(\"survey\")\n\n[1] '4.5'\n\npackageVersion(\"srvyr\")\n\n[1] '1.3.1'\n\n\nCite R and the packages too. citation() and citation(\"survey\") print the references.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#testing-a-whole-variable",
-    "href": "survey/n6-regression.html#testing-a-whole-variable",
-    "title": "N6 · Tests and Regression",
-    "section": "6. Testing a whole variable",
-    "text": "6. Testing a whole variable\nPoverty has three odds ratios. To ask one question, “is income associated with the outcome, after adjustment?”, test all three together with regTermTest():\n\nregTermTest(model_adjusted, ~ poverty)\n\nWald test for poverty\n in svyglm(formula = fair_poor ~ poverty + education + age_group + \n    sex, design = survivors, family = quasibinomial())\nF =  25.55712  on  3  and  541  df: p= 1.7848e-15 \n\n\np &lt; 0.001: strong evidence that income is associated with fair or poor health among survivors, independent of education, age, and sex.",
+    "objectID": "survey/n7-project.html#adding-your-own-variables",
+    "href": "survey/n7-project.html#adding-your-own-variables",
+    "title": "N7 · Your Own Project",
+    "section": "6. Adding your own variables",
+    "text": "6. Adding your own variables\nThe teaching file has 16 of the 577 variables in the 2025 Sample Adult file. For your own question, go back to the source:\n\nDownload the full file from the NCHS NHIS website and save it in data/raw/.\nRead it with read_csv(..., guess_max = 24215) (N1).\nFor each variable you add, read its codebook entry: the exact question, the universe (who was asked), and the codes (N1).\nAdd it to your preparation script: special codes to NA, then recode, then compare your counts with the codebook (N2).\nKeep WTFA_A, PSTRAT, and PPSU, and keep every adult (N2, N5).\n\nBefore combining several years of NHIS data, read the section on pooling in the NCHS survey description: the weights must be adjusted, and questions sometimes change between years.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#what-happens-if-you-ignore-the-design",
-    "href": "survey/n6-regression.html#what-happens-if-you-ignore-the-design",
-    "title": "N6 · Tests and Regression",
-    "section": "7. What happens if you ignore the design?",
-    "text": "7. What happens if you ignore the design?\nHere is the same adjusted model fitted with ordinary glm(): no weights, no strata, no PSUs.\n\nunweighted_model &lt;- glm(\n  fair_poor ~ poverty + education + age_group + sex,\n  data = analysis %&gt;%\n    filter(survivor == 1) %&gt;%\n    mutate(\n      poverty = fct_relevel(poverty, \"400% or more\"),\n      education = fct_relevel(education, \"Bachelor or higher\")\n    ),\n  family = binomial()\n)\n\ntidy(unweighted_model, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  filter(term == \"sexMale\") %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 1 × 5\n  term    estimate conf.low conf.high  p.value\n  &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;\n1 sexMale    1.299    1.084     1.555 0.004510\n\n\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nCompare the sexMale row of unweighted_model with the same row of model_adjusted. Would the two models lead you to the same conclusion about sex?\nExpected result: no. The unweighted model gives OR 1.30 with p = 0.005, which looks like clear evidence that men have higher odds. The design-based model gives OR 1.21 with p = 0.085 and a confidence interval that includes 1: no clear evidence.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ntidy(model_adjusted, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  filter(term == \"sexMale\") %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 1 × 5\n  term    estimate conf.low conf.high p.value\n  &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;\n1 sexMale    1.212   0.9740     1.508 0.08466\n\n\nIgnoring the design changed both the estimate (the weights) and the uncertainty (the strata and PSUs), and together they turned “no clear evidence” into a “significant” finding. A paper built on the unweighted model would report a sex difference that the data do not support.",
+    "objectID": "survey/n7-project.html#checklist",
+    "href": "survey/n7-project.html#checklist",
+    "title": "N7 · Your Own Project",
+    "section": "7. Checklist",
+    "text": "7. Checklist\nBefore you share any result, check that:\n\nEvery script passes the fresh-start test, in order\nEvery recode was checked against the codebook counts\nThe design was built from the full file, with weights, strata, and PSUs, and subgroups were filtered on the design\nEvery estimate is reported with its unweighted n and a 95% confidence interval\nEvery percent was checked against the NCHS standards\nOdds ratios are described as odds, not risk\nThe methods section says how each of these was done",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#reporting-results",
-    "href": "survey/n6-regression.html#reporting-results",
-    "title": "N6 · Tests and Regression",
-    "section": "8. Reporting results",
-    "text": "8. Reporting results\nA typical results sentence:\n\nAmong U.S. adult cancer survivors, fair or poor self-rated health was strongly associated with family income. After adjustment for education, age, and sex, survivors with family income below the federal poverty line had 4.7 times the odds of fair or poor health of those with income at or above 400% of the poverty line (OR 4.72, 95% CI 3.10 to 7.18).\n\nAnd in the methods: the survey-weighted logistic regression, the software (R with the survey and srvyr packages), and that variance was estimated using the NHIS strata and PSUs. Lesson N7 puts this together.",
+    "objectID": "survey/n7-project.html#the-end-of-r-for-survey-data",
+    "href": "survey/n7-project.html#the-end-of-r-for-survey-data",
+    "title": "N7 · Your Own Project",
+    "section": "The end of R for Survey Data",
+    "text": "The end of R for Survey Data\nYou have gone from reading your first codebook entry to a design-based analysis that you can defend line by line. The same skills apply to other national surveys, such as NHANES, BRFSS, and MEPS: each has its own weights, design variables, and documentation, and the habits are the same.\nBack to the R for Survey Data overview, or the Tutorials home page.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N7: Your Own Project"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#recap",
-    "href": "survey/n6-regression.html#recap",
-    "title": "N6 · Tests and Regression",
+    "objectID": "survey/n5-estimates.html",
+    "href": "survey/n5-estimates.html",
+    "title": "N5 · Weighted Estimates",
+    "section": "",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N4: Why Weights Matter. Work in n5.R in your starter project.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#setup",
+    "href": "survey/n5-estimates.html#setup",
+    "title": "N5 · Weighted Estimates",
+    "section": "1. Setup",
+    "text": "1. Setup\n\nlibrary(tidyverse)\nlibrary(srvyr)\n\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#subgroups-filter-the-design-not-the-data",
+    "href": "survey/n5-estimates.html#subgroups-filter-the-design-not-the-data",
+    "title": "N5 · Weighted Estimates",
+    "section": "2. Subgroups: filter the design, not the data",
+    "text": "2. Subgroups: filter the design, not the data\nThe research question is about cancer survivors, a subgroup. There are two ways you might try to focus on them.\nThe right way: build the design from the full file, then filter() the design.\n\nnhis_design %&gt;%\n  filter(survivor == 1, poverty == \"Below 100%\") %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1    0.5760        0.4906        0.6613\n\n\nThe wrong way: filter() the data first, then build the design from what is left.\n\nanalysis %&gt;%\n  filter(survivor == 1, poverty == \"Below 100%\") %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\nError in `dplyr::summarise()`:\nℹ In argument: `fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype\n  = \"ci\")`.\nCaused by error in `onestrat()`:\n! Stratum (204) has only one PSU at stage 1\n\n\nAn error. To measure uncertainty, the survey package compares the PSUs within each stratum, so every stratum needs at least two. After cutting the data down to about 200 people, some strata have only one PSU left, and the calculation is impossible.\nFiltering the design instead keeps the full structure of the survey: everyone outside the subgroup stays in the design and simply counts as zero. This is called domain (or subpopulation) estimation, and it is what NCHS recommends in its survey description: analyze subgroups using the full data file.\n\n\n\n\n\n\nWarningWhy not just cut the data when it happens to run?\n\n\n\nFor large subgroups, cutting the data first sometimes runs and gives almost the same answer. But it fails as soon as a subgroup gets small, and searching the error message online leads to settings that silence it without fixing the problem. In other surveys, it can even give a wrong confidence interval with no error at all. Build the design once from the full file, and filter the design. Always.\n\n\nThis is also why lesson N2 kept every adult in the analysis file.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#the-income-gradient-among-survivors",
+    "href": "survey/n5-estimates.html#the-income-gradient-among-survivors",
+    "title": "N5 · Weighted Estimates",
+    "section": "3. The income gradient among survivors",
+    "text": "3. The income gradient among survivors\nNow the core of the project. For survivors, estimate the percent in fair or poor health in each income group. Two additions to what you know:\n\nfilter(!is.na(fair_poor)) on the design leaves out the 2 survivors without an answer, so the counts describe exactly the people in each estimate.\nunweighted(n()) counts the people in the sample behind each estimate. Always report it next to weighted estimates.\n\n\nby_poverty &lt;- nhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor)) %&gt;%\n  group_by(poverty) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nby_poverty\n\n# A tibble: 4 × 5\n  poverty          n fair_poor fair_poor_low fair_poor_upp\n  &lt;fct&gt;        &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 Below 100%     206     57.60         49.13         66.06\n2 100-199%       495     43.68         38.17         49.19\n3 200-399%       891     27.44         23.78         31.10\n4 400% or more  1239     16.86         14.34         19.38\n\n\nA steep gradient: among survivors living below the poverty line, more than half report fair or poor health; among those with family income at least four times the poverty line, about one in six do. The confidence intervals of the lowest and highest groups are far apart, so this is not just sampling noise.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nDo the same for education among survivors. Remember to leave out missing education.\nExpected result: High school or less 40.2% (95% CI 36.1 to 44.2); Some college 28.6% (24.9 to 32.3); Bachelor or higher 14.7% (12.4 to 17.0).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %&gt;%\n  group_by(education) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 3 × 5\n  education               n fair_poor fair_poor_low fair_poor_upp\n  &lt;fct&gt;               &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 High school or less   867     40.17         36.13         44.20\n2 Some college          846     28.60         24.87         32.33\n3 Bachelor or higher   1109     14.73         12.41         17.05",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#when-an-estimate-is-too-uncertain",
+    "href": "survey/n5-estimates.html#when-an-estimate-is-too-uncertain",
+    "title": "N5 · Weighted Estimates",
+    "section": "4. When an estimate is too uncertain",
+    "text": "4. When an estimate is too uncertain\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nNow estimate fair or poor health among survivors with and without health insurance. Look closely at n and at the confidence intervals. What do you notice?\nExpected result: insured 27.4% (95% CI 25.3 to 29.5), based on 2,783 people; uninsured 29.0%, based on only 44 people, with a confidence interval from about 12% to 46%.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(insured)) %&gt;%\n  group_by(insured) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 2 × 5\n  insured     n fair_poor fair_poor_low fair_poor_upp\n  &lt;chr&gt;   &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 No         44     28.95         12.40         45.51\n2 Yes      2783     27.39         25.30         29.49\n\n\nMost survivors are 65 or older and covered by Medicare, so only 44 uninsured survivors (with an answer about their health) were interviewed. The estimate for them, 29%, is compatible with anything from about 12% to 46%: it says almost nothing. Do not report a number like this as a finding. Lesson N7 covers NCHS’s rules for when an estimate is too unreliable to publish.\n\n\n\nThe habit to take away: always look at n and the width of the confidence interval before you look at the estimate.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#survivors-compared-with-everyone-else",
+    "href": "survey/n5-estimates.html#survivors-compared-with-everyone-else",
+    "title": "N5 · Weighted Estimates",
+    "section": "5. Survivors compared with everyone else",
+    "text": "5. Survivors compared with everyone else\nIs poor health among low-income survivors just about income? Compare survivors and non-survivors at each income level by grouping by both.\n\nby_both &lt;- nhis_design %&gt;%\n  filter(!is.na(survivor), !is.na(fair_poor)) %&gt;%\n  group_by(survivor, poverty) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nby_both\n\n# A tibble: 8 × 6\n# Groups:   survivor [2]\n  survivor poverty          n fair_poor fair_poor_low fair_poor_upp\n     &lt;dbl&gt; &lt;fct&gt;        &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1        0 Below 100%    2004    28.09         25.66         30.51 \n2        0 100-199%      3681    22.66         20.96         24.35 \n3        0 200-399%      6399    12.82         11.80         13.84 \n4        0 400% or more  9260     7.051         6.434         7.668\n5        1 Below 100%     206    57.60         49.13         66.06 \n6        1 100-199%       495    43.68         38.17         49.19 \n7        1 200-399%       891    27.44         23.78         31.10 \n8        1 400% or more  1239    16.86         14.34         19.38 \n\n\nAt every income level, survivors are roughly twice as likely as other adults to report fair or poor health. And the income gradient appears in both groups. A table this size is hard to take in; a plot is better.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#plotting-estimates-with-confidence-intervals",
+    "href": "survey/n5-estimates.html#plotting-estimates-with-confidence-intervals",
+    "title": "N5 · Weighted Estimates",
+    "section": "6. Plotting estimates with confidence intervals",
+    "text": "6. Plotting estimates with confidence intervals\ngeom_pointrange() draws each estimate as a point with a line for its confidence interval. It needs y for the estimate and ymin and ymax for the limits. expand_limits(y = 0) makes the axis start at zero, so differences are not visually exaggerated.\n\nggplot(by_poverty, aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +\n  geom_pointrange() +\n  expand_limits(y = 0) +\n  labs(\n    x = \"Family income (percent of poverty line)\",\n    y = \"Fair or poor health (%)\",\n    title = \"Cancer survivors, NHIS 2025\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\nTo show two groups side by side, map one of them to color and nudge the points apart with position_dodge(). factor() turns the 0/1 survivor column into labels for the legend.\n\nby_both %&gt;%\n  mutate(group = factor(survivor, levels = c(1, 0), labels = c(\"Cancer survivors\", \"Other adults\"))) %&gt;%\n  ggplot(aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp, color = group)) +\n  geom_pointrange(position = position_dodge(width = 0.4)) +\n  expand_limits(y = 0) +\n  labs(\n    x = \"Family income (percent of poverty line)\",\n    y = \"Fair or poor health (%)\",\n    color = NULL,\n    title = \"Fair or poor health by income, NHIS 2025\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nMake the first kind of plot for education among survivors: one point and interval for each education group.\nExpected result: three points falling from about 40% to about 15%, with intervals that do not overlap between the lowest and highest groups.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nby_education &lt;- nhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %&gt;%\n  group_by(education) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nggplot(by_education, aes(x = education, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +\n  geom_pointrange() +\n  expand_limits(y = 0) +\n  labs(x = NULL, y = \"Fair or poor health (%)\", title = \"Cancer survivors, NHIS 2025\") +\n  theme_minimal()",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#what-the-estimates-do-and-do-not-show",
+    "href": "survey/n5-estimates.html#what-the-estimates-do-and-do-not-show",
+    "title": "N5 · Weighted Estimates",
+    "section": "7. What the estimates do and do not show",
+    "text": "7. What the estimates do and do not show\nThese are descriptive estimates: they describe how fair or poor health is distributed among U.S. adult cancer survivors. They do not explain why. Income and education are related to each other, to age, and to the kinds of cancer people have had. Separating these influences takes a regression model, which is lesson N6.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n5-estimates.html#recap",
+    "href": "survey/n5-estimates.html#recap",
+    "title": "N5 · Weighted Estimates",
     "section": "Recap",
-    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nsvychisq(~ a + b, design = d)\nChi-square test with the Rao-Scott design correction\n\n\nfct_relevel(x, \"level\")\nMake “level” the reference category\n\n\nsvyglm(y ~ x1 + x2, design = d, family = quasibinomial())\nSurvey-weighted logistic regression\n\n\ntidy(model, exponentiate = TRUE, conf.int = TRUE)\nOdds ratios with 95% confidence intervals\n\n\nregTermTest(model, ~ x)\nTest all categories of one variable together",
+    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nnhis_design %&gt;% filter(...)\nEstimate for a subgroup, keeping the full design\n\n\nunweighted(n())\nNumber of people in the sample behind an estimate\n\n\ngroup_by(a, b) on the design\nEstimates for every combination of two variables\n\n\ngeom_pointrange(aes(y, ymin, ymax))\nPlot estimates with their confidence intervals\n\n\nposition_dodge(width = 0.4)\nPlace groups side by side\n\n\nexpand_limits(y = 0)\nStart the axis at zero\n\n\n\nThe rules: build the design from the full file and filter the design; report n with every estimate; check the confidence interval before trusting the estimate.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N5: Weighted Estimates"
     ]
   },
   {
-    "objectID": "survey/n6-regression.html#next",
-    "href": "survey/n6-regression.html#next",
-    "title": "N6 · Tests and Regression",
+    "objectID": "survey/n5-estimates.html#next",
+    "href": "survey/n5-estimates.html#next",
+    "title": "N5 · Weighted Estimates",
     "section": "Next",
-    "text": "Next\nN7: Your Own Project is coming soon: organizing a project, NCHS’s rules for when an estimate is too unreliable to publish, and writing up your methods.",
+    "text": "Next\nContinue with N6: Tests and Regression: testing whether differences are larger than chance, and estimating the income gradient while accounting for age, sex, and education.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N6: Tests and Regression"
+      "N5: Weighted Estimates"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html",
+    "href": "survey/n3-rstudio.html",
+    "title": "N3 · Moving to RStudio",
+    "section": "",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N2: Preparing Variables.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#why-move",
+    "href": "survey/n3-rstudio.html#why-move",
+    "title": "N3 · Moving to RStudio",
+    "section": "1. Why move?",
+    "text": "1. Why move?\nColab was a good place to start: nothing to install. For a real project it has three problems:\n\nEverything disappears when the session ends: your data, your files, and every package you installed.\nPackages must be reinstalled every session. The survey packages used from N4 on take a while to install.\nReal projects have many files (data, scripts, results) that need to stay together.\n\nRStudio runs on your own computer. You install things once, and your files stay where you put them. From here on, you will read each lesson on this website and type the code into RStudio.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#install-r-and-rstudio",
+    "href": "survey/n3-rstudio.html#install-r-and-rstudio",
+    "title": "N3 · Moving to RStudio",
+    "section": "2. Install R and RStudio",
+    "text": "2. Install R and RStudio\nYou need two programs, installed in this order:\n\nR, the language itself: download it from CRAN. Choose your operating system (for a Mac, choose the version that matches your processor: Apple silicon or Intel) and install it with the default settings.\nRStudio Desktop, the program you work in: download it from Posit and install it.\n\nYou only ever open RStudio. It finds R by itself.\n\n\n\n\n\n\nTipA university computer?\n\n\n\nIf you cannot install software on your computer, ask your instructor about Posit Cloud, which runs RStudio in a web browser.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#get-the-starter-project",
+    "href": "survey/n3-rstudio.html#get-the-starter-project",
+    "title": "N3 · Moving to RStudio",
+    "section": "3. Get the starter project",
+    "text": "3. Get the starter project\nAn RStudio project is a folder that holds everything for one piece of work, plus a small .Rproj file. Opening the .Rproj file opens RStudio inside that folder, so file paths like data/nhis2025_adult.csv just work.\n\nDownload nhis-project.zip (about 1.3 MB).\nUnzip it and move the nhis-project folder somewhere permanent, such as your Documents folder.\n\nOn Windows, right-click the zip file and choose Extract All. Do not work inside the zip file itself; it only looks like a folder.\nOn a Mac, double-click the zip file.\n\nDouble-click nhis-project.Rproj to open the project in RStudio.\n\nThe folder contains:\n\n\n\nFile\nWhat it is\n\n\n\n\nnhis-project.Rproj\nOpens the project\n\n\ndata/nhis2025_adult.csv\nThe NHIS teaching file from N1 and N2\n\n\nprepare.R\nThe N2 code, as a script\n\n\nn3.R … n7.R\nEmpty scripts, one for each lesson",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#a-tour-of-rstudio",
+    "href": "survey/n3-rstudio.html#a-tour-of-rstudio",
+    "title": "N3 · Moving to RStudio",
+    "section": "4. A tour of RStudio",
+    "text": "4. A tour of RStudio\nRStudio has four panes:\n\n\n\n\n\n\n\n\nPane\nWhere\nWhat it is for\n\n\n\n\nSource\ntop left\nScripts: code you write and save. Open n3.R to see it.\n\n\nConsole\nbottom left\nWhere code actually runs, and where results appear\n\n\nEnvironment\ntop right\nThe objects you have created, such as dataframes\n\n\nFiles\nbottom right\nThe files in your project folder\n\n\n\nA script is just a text file of R code. Unlike a Colab notebook, the results are not saved in the file; they appear in the Console when you run the code.\nTwo ways to run code from a script:\n\nRun the current line (or selected lines): Ctrl + Enter on Windows, Cmd + Enter on a Mac.\nRun the whole script from top to bottom: the Source button at the top of the script, or Ctrl + Shift + S / Cmd + Shift + S.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#install-the-packages",
+    "href": "survey/n3-rstudio.html#install-the-packages",
+    "title": "N3 · Moving to RStudio",
+    "section": "5. Install the packages",
+    "text": "5. Install the packages\nPackages are installed once per computer, then loaded with library() in every script. Type this into the Console (not a script, since you never need to run it again) and press Enter:\n\ninstall.packages(c(\"tidyverse\", \"survey\", \"srvyr\"))\n\nThis can take several minutes. When it finishes, check that each one loads:\n\nlibrary(tidyverse)\nlibrary(survey)\nlibrary(srvyr)\n\nMessages are normal; an error that says there is no package called ... means the installation did not finish. These lessons were tested with tidyverse 2.0.0, survey 4.5, and srvyr 1.3.1. You can check yours with packageVersion(\"srvyr\").\n\nsurvey is the standard R package for analyzing complex survey data.\nsrvyr lets you use survey methods with the same %&gt;%, filter(), group_by(), and summarize() you already know. You will use it from N4 on.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#run-the-preparation-script",
+    "href": "survey/n3-rstudio.html#run-the-preparation-script",
+    "title": "N3 · Moving to RStudio",
+    "section": "6. Run the preparation script",
+    "text": "6. Run the preparation script\nOpen prepare.R from the Files pane. It is the code you wrote in N2, as one script. Read through it: every step should look familiar. Then click Source to run it all.\nIt reads the teaching file, builds the analysis variables, and saves the result as data/nhis_analysis.rds.\n\n\n\n\n\n\nNoteWhy .rds and not .csv?\n\n\n\nA CSV file holds only text and numbers. An .rds file saves an R object exactly as it is, including details such as the order of the categories you set with factor() in N2. Use saveRDS() to save and readRDS() to read.\n\n\nanalysis now appears in the Environment pane: 24,215 observations of 12 variables.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nIn the Console, check the analysis file with dim(analysis) and count(analysis, survivor).\nExpected result: 24,215 rows and 12 columns; 2,833 survivors, 21,349 non-survivors, 33 NA.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ndim(analysis)\n\n[1] 24215    12\n\ncount(analysis, survivor)\n\n# A tibble: 3 × 2\n  survivor     n\n     &lt;dbl&gt; &lt;int&gt;\n1        0 21349\n2        1  2833\n3       NA    33",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#your-first-script",
+    "href": "survey/n3-rstudio.html#your-first-script",
+    "title": "N3 · Moving to RStudio",
+    "section": "7. Your first script",
+    "text": "7. Your first script\nNow write code in n3.R, where it is saved. A script should be able to run on its own from a fresh start, so it begins by loading its packages and its data.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nIn n3.R, write a script that:\n\nloads the tidyverse,\nreads data/nhis_analysis.rds with readRDS(),\ncalculates, for survivors only, the percent in fair or poor health in each poverty group, as you did for education in N2.\n\nSave the script (Ctrl + S / Cmd + S), then run it with Source.\nExpected result: Below 100% 57.8%; 100-199% 40.8%; 200-399% 27.5%; 400% or more 15.7%.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nlibrary(tidyverse)\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nanalysis %&gt;%\n  filter(survivor == 1, !is.na(fair_poor)) %&gt;%\n  group_by(poverty) %&gt;%\n  summarize(people = n(), pct_fair_poor = 100 * mean(fair_poor))\n\n# A tibble: 4 × 3\n  poverty      people pct_fair_poor\n  &lt;fct&gt;         &lt;int&gt;         &lt;dbl&gt;\n1 Below 100%      206          57.8\n2 100-199%        495          40.8\n3 200-399%        891          27.5\n4 400% or more   1239          15.7",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#the-fresh-start-test",
+    "href": "survey/n3-rstudio.html#the-fresh-start-test",
+    "title": "N3 · Moving to RStudio",
+    "section": "8. The fresh-start test",
+    "text": "8. The fresh-start test\nA script that works only because of something you typed earlier in the Console will fail for anyone else, including you next week. Test it the way a stranger would run it:\n\nSession &gt; Restart R. This clears everything from memory; the Environment pane empties.\nRun n3.R with Source.\n\nIf it still gives the same result, the script is complete. If you get an error such as object 'analysis' not found, something the script needs is missing from it.\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nDo the fresh-start test on n3.R.\nExpected result: the same four percentages as before, with no errors.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\nIf it failed, the most likely cause is a missing library(tidyverse) or readRDS() line at the top of the script. Every lesson script from now on starts with those two lines (plus library(srvyr) from N4).",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#recap",
+    "href": "survey/n3-rstudio.html#recap",
+    "title": "N3 · Moving to RStudio",
+    "section": "Recap",
+    "text": "Recap\n\n\n\n\n\n\n\nStep\nHow\n\n\n\n\nOpen the project\nDouble-click nhis-project.Rproj\n\n\nInstall a package (once per computer)\ninstall.packages(\"name\") in the Console\n\n\nLoad a package (every script)\nlibrary(name) at the top of the script\n\n\nRun a line / the whole script\nCtrl/Cmd + Enter / Source\n\n\nSave and read an R object\nsaveRDS(x, \"file.rds\"), readRDS(\"file.rds\")\n\n\nCheck a script is complete\nSession &gt; Restart R, then Source",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#next",
+    "href": "survey/n3-rstudio.html#next",
+    "title": "N3 · Moving to RStudio",
+    "section": "Next",
+    "text": "Next\nContinue with N4: Why Weights Matter, which uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Tutorials",
+    "section": "",
+    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
+  },
+  {
+    "objectID": "index.html#how-the-tutorials-work",
+    "href": "index.html#how-the-tutorials-work",
+    "title": "Tutorials",
+    "section": "How the tutorials work",
+    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
+  },
+  {
+    "objectID": "aou/index.html",
+    "href": "aou/index.html",
+    "title": "R for All of Us",
+    "section": "",
+    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-a-write-it-yourself",
+    "href": "aou/index.html#path-a-write-it-yourself",
+    "title": "R for All of Us",
+    "section": "Path A: Write It Yourself",
+    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-b-ai-assisted",
+    "href": "aou/index.html#path-b-ai-assisted",
+    "title": "R for All of Us",
+    "section": "Path B: AI-Assisted",
+    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html",
+    "href": "foundations/index.html",
+    "title": "R Foundations",
+    "section": "",
+    "text": "A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#how-to-use-the-notebooks",
+    "href": "foundations/index.html#how-to-use-the-notebooks",
+    "title": "R Foundations",
+    "section": "How to use the notebooks",
+    "text": "How to use the notebooks\n\nClick a notebook link below.\nSign in with a Google account.\nChoose File &gt; Save a copy in Drive and work in your copy. If you skip this step, your work is lost when you close the tab.\nRun the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#notebooks",
+    "href": "foundations/index.html#notebooks",
+    "title": "R Foundations",
+    "section": "Notebooks",
+    "text": "Notebooks\n\n\n\nNotebook\nCovers\n\n\n\n\nF1: First Steps in R\nRunning code, arithmetic, variables, functions, reading error messages\n\n\nF2: Vectors and Data Types\nVectors, numbers vs. text, TRUE/FALSE, dates, missing values\n\n\nF3: Dataframes\nBuilding and inspecting a table; one row per person or many\n\n\nF4: Choosing Rows and Columns\nPackages, select(), filter(), the pipe\n\n\nF5: New Columns and Data Files\nmutate(), if_else(), reading a CSV file, exploring a new dataset\n\n\nF6: Combining Tables\nInner and left joins, missing values from joins, duplicated rows",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#where-next",
+    "href": "foundations/index.html#where-next",
+    "title": "R Foundations",
+    "section": "Where next",
+    "text": "Where next\n\nWorking with All of Us data? Continue with R for All of Us.\nWorking with national survey data? Continue with R for Survey Data.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "survey/index.html",
+    "href": "survey/index.html",
+    "title": "R for Survey Data",
+    "section": "",
+    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "survey/index.html#lessons",
+    "href": "survey/index.html#lessons",
+    "title": "R for Survey Data",
+    "section": "Lessons",
+    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nReady\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nReady\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nReady\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nReady\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nReady\n\n\n\nComplete R Foundations first.",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
     ]
   },
   {
@@ -264,368 +605,135 @@
     ]
   },
   {
-    "objectID": "survey/index.html",
-    "href": "survey/index.html",
-    "title": "R for Survey Data",
+    "objectID": "survey/n6-regression.html",
+    "href": "survey/n6-regression.html",
+    "title": "N6 · Tests and Regression",
     "section": "",
-    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
-    "crumbs": [
-      "R for Survey Data",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "survey/index.html#lessons",
-    "href": "survey/index.html#lessons",
-    "title": "R for Survey Data",
-    "section": "Lessons",
-    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nReady\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nReady\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nReady\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nReady\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
-    "crumbs": [
-      "R for Survey Data",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html",
-    "href": "foundations/index.html",
-    "title": "R Foundations",
-    "section": "",
-    "text": "A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#how-to-use-the-notebooks",
-    "href": "foundations/index.html#how-to-use-the-notebooks",
-    "title": "R Foundations",
-    "section": "How to use the notebooks",
-    "text": "How to use the notebooks\n\nClick a notebook link below.\nSign in with a Google account.\nChoose File &gt; Save a copy in Drive and work in your copy. If you skip this step, your work is lost when you close the tab.\nRun the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#notebooks",
-    "href": "foundations/index.html#notebooks",
-    "title": "R Foundations",
-    "section": "Notebooks",
-    "text": "Notebooks\n\n\n\nNotebook\nCovers\n\n\n\n\nF1: First Steps in R\nRunning code, arithmetic, variables, functions, reading error messages\n\n\nF2: Vectors and Data Types\nVectors, numbers vs. text, TRUE/FALSE, dates, missing values\n\n\nF3: Dataframes\nBuilding and inspecting a table; one row per person or many\n\n\nF4: Choosing Rows and Columns\nPackages, select(), filter(), the pipe\n\n\nF5: New Columns and Data Files\nmutate(), if_else(), reading a CSV file, exploring a new dataset\n\n\nF6: Combining Tables\nInner and left joins, missing values from joins, duplicated rows",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#where-next",
-    "href": "foundations/index.html#where-next",
-    "title": "R Foundations",
-    "section": "Where next",
-    "text": "Where next\n\nWorking with All of Us data? Continue with R for All of Us.\nWorking with national survey data? Continue with R for Survey Data.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html",
-    "href": "aou/index.html",
-    "title": "R for All of Us",
-    "section": "",
-    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html#path-a-write-it-yourself",
-    "href": "aou/index.html#path-a-write-it-yourself",
-    "title": "R for All of Us",
-    "section": "Path A: Write It Yourself",
-    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html#path-b-ai-assisted",
-    "href": "aou/index.html#path-b-ai-assisted",
-    "title": "R for All of Us",
-    "section": "Path B: AI-Assisted",
-    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Tutorials",
-    "section": "",
-    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
-  },
-  {
-    "objectID": "index.html#how-the-tutorials-work",
-    "href": "index.html#how-the-tutorials-work",
-    "title": "Tutorials",
-    "section": "How the tutorials work",
-    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
-  },
-  {
-    "objectID": "survey/n3-rstudio.html",
-    "href": "survey/n3-rstudio.html",
-    "title": "N3 · Moving to RStudio",
-    "section": "",
-    "text": "In this lesson you will learn to:\nBefore this lesson: N2: Preparing Variables.",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N5: Weighted Estimates. Work in n6.R in your starter project.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N3: Moving to RStudio"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n3-rstudio.html#why-move",
-    "href": "survey/n3-rstudio.html#why-move",
-    "title": "N3 · Moving to RStudio",
-    "section": "1. Why move?",
-    "text": "1. Why move?\nColab was a good place to start: nothing to install. For a real project it has three problems:\n\nEverything disappears when the session ends: your data, your files, and every package you installed.\nPackages must be reinstalled every session. The survey packages used from N4 on take a while to install.\nReal projects have many files (data, scripts, results) that need to stay together.\n\nRStudio runs on your own computer. You install things once, and your files stay where you put them. From here on, you will read each lesson on this website and type the code into RStudio.",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#install-r-and-rstudio",
-    "href": "survey/n3-rstudio.html#install-r-and-rstudio",
-    "title": "N3 · Moving to RStudio",
-    "section": "2. Install R and RStudio",
-    "text": "2. Install R and RStudio\nYou need two programs, installed in this order:\n\nR, the language itself: download it from CRAN. Choose your operating system (for a Mac, choose the version that matches your processor: Apple silicon or Intel) and install it with the default settings.\nRStudio Desktop, the program you work in: download it from Posit and install it.\n\nYou only ever open RStudio. It finds R by itself.\n\n\n\n\n\n\nTipA university computer?\n\n\n\nIf you cannot install software on your computer, ask your instructor about Posit Cloud, which runs RStudio in a web browser.",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#get-the-starter-project",
-    "href": "survey/n3-rstudio.html#get-the-starter-project",
-    "title": "N3 · Moving to RStudio",
-    "section": "3. Get the starter project",
-    "text": "3. Get the starter project\nAn RStudio project is a folder that holds everything for one piece of work, plus a small .Rproj file. Opening the .Rproj file opens RStudio inside that folder, so file paths like data/nhis2025_adult.csv just work.\n\nDownload nhis-project.zip (about 1.3 MB).\nUnzip it and move the nhis-project folder somewhere permanent, such as your Documents folder.\n\nOn Windows, right-click the zip file and choose Extract All. Do not work inside the zip file itself; it only looks like a folder.\nOn a Mac, double-click the zip file.\n\nDouble-click nhis-project.Rproj to open the project in RStudio.\n\nThe folder contains:\n\n\n\nFile\nWhat it is\n\n\n\n\nnhis-project.Rproj\nOpens the project\n\n\ndata/nhis2025_adult.csv\nThe NHIS teaching file from N1 and N2\n\n\nprepare.R\nThe N2 code, as a script\n\n\nn3.R … n7.R\nEmpty scripts, one for each lesson",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#a-tour-of-rstudio",
-    "href": "survey/n3-rstudio.html#a-tour-of-rstudio",
-    "title": "N3 · Moving to RStudio",
-    "section": "4. A tour of RStudio",
-    "text": "4. A tour of RStudio\nRStudio has four panes:\n\n\n\n\n\n\n\n\nPane\nWhere\nWhat it is for\n\n\n\n\nSource\ntop left\nScripts: code you write and save. Open n3.R to see it.\n\n\nConsole\nbottom left\nWhere code actually runs, and where results appear\n\n\nEnvironment\ntop right\nThe objects you have created, such as dataframes\n\n\nFiles\nbottom right\nThe files in your project folder\n\n\n\nA script is just a text file of R code. Unlike a Colab notebook, the results are not saved in the file; they appear in the Console when you run the code.\nTwo ways to run code from a script:\n\nRun the current line (or selected lines): Ctrl + Enter on Windows, Cmd + Enter on a Mac.\nRun the whole script from top to bottom: the Source button at the top of the script, or Ctrl + Shift + S / Cmd + Shift + S.",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#install-the-packages",
-    "href": "survey/n3-rstudio.html#install-the-packages",
-    "title": "N3 · Moving to RStudio",
-    "section": "5. Install the packages",
-    "text": "5. Install the packages\nPackages are installed once per computer, then loaded with library() in every script. Type this into the Console (not a script, since you never need to run it again) and press Enter:\n\ninstall.packages(c(\"tidyverse\", \"survey\", \"srvyr\"))\n\nThis can take several minutes. When it finishes, check that each one loads:\n\nlibrary(tidyverse)\nlibrary(survey)\nlibrary(srvyr)\n\nMessages are normal; an error that says there is no package called ... means the installation did not finish. These lessons were tested with tidyverse 2.0.0, survey 4.5, and srvyr 1.3.1. You can check yours with packageVersion(\"srvyr\").\n\nsurvey is the standard R package for analyzing complex survey data.\nsrvyr lets you use survey methods with the same %&gt;%, filter(), group_by(), and summarize() you already know. You will use it from N4 on.",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#run-the-preparation-script",
-    "href": "survey/n3-rstudio.html#run-the-preparation-script",
-    "title": "N3 · Moving to RStudio",
-    "section": "6. Run the preparation script",
-    "text": "6. Run the preparation script\nOpen prepare.R from the Files pane. It is the code you wrote in N2, as one script. Read through it: every step should look familiar. Then click Source to run it all.\nIt reads the teaching file, builds the analysis variables, and saves the result as data/nhis_analysis.rds.\n\n\n\n\n\n\nNoteWhy .rds and not .csv?\n\n\n\nA CSV file holds only text and numbers. An .rds file saves an R object exactly as it is, including details such as the order of the categories you set with factor() in N2. Use saveRDS() to save and readRDS() to read.\n\n\nanalysis now appears in the Environment pane: 24,215 observations of 12 variables.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nIn the Console, check the analysis file with dim(analysis) and count(analysis, survivor).\nExpected result: 24,215 rows and 12 columns; 2,833 survivors, 21,349 non-survivors, 33 NA.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ndim(analysis)\n\n[1] 24215    12\n\ncount(analysis, survivor)\n\n# A tibble: 3 × 2\n  survivor     n\n     &lt;dbl&gt; &lt;int&gt;\n1        0 21349\n2        1  2833\n3       NA    33",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#your-first-script",
-    "href": "survey/n3-rstudio.html#your-first-script",
-    "title": "N3 · Moving to RStudio",
-    "section": "7. Your first script",
-    "text": "7. Your first script\nNow write code in n3.R, where it is saved. A script should be able to run on its own from a fresh start, so it begins by loading its packages and its data.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nIn n3.R, write a script that:\n\nloads the tidyverse,\nreads data/nhis_analysis.rds with readRDS(),\ncalculates, for survivors only, the percent in fair or poor health in each poverty group, as you did for education in N2.\n\nSave the script (Ctrl + S / Cmd + S), then run it with Source.\nExpected result: Below 100% 57.8%; 100-199% 40.8%; 200-399% 27.5%; 400% or more 15.7%.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nlibrary(tidyverse)\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nanalysis %&gt;%\n  filter(survivor == 1, !is.na(fair_poor)) %&gt;%\n  group_by(poverty) %&gt;%\n  summarize(people = n(), pct_fair_poor = 100 * mean(fair_poor))\n\n# A tibble: 4 × 3\n  poverty      people pct_fair_poor\n  &lt;fct&gt;         &lt;int&gt;         &lt;dbl&gt;\n1 Below 100%      206          57.8\n2 100-199%        495          40.8\n3 200-399%        891          27.5\n4 400% or more   1239          15.7",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#the-fresh-start-test",
-    "href": "survey/n3-rstudio.html#the-fresh-start-test",
-    "title": "N3 · Moving to RStudio",
-    "section": "8. The fresh-start test",
-    "text": "8. The fresh-start test\nA script that works only because of something you typed earlier in the Console will fail for anyone else, including you next week. Test it the way a stranger would run it:\n\nSession &gt; Restart R. This clears everything from memory; the Environment pane empties.\nRun n3.R with Source.\n\nIf it still gives the same result, the script is complete. If you get an error such as object 'analysis' not found, something the script needs is missing from it.\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nDo the fresh-start test on n3.R.\nExpected result: the same four percentages as before, with no errors.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\nIf it failed, the most likely cause is a missing library(tidyverse) or readRDS() line at the top of the script. Every lesson script from now on starts with those two lines (plus library(srvyr) from N4).",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#recap",
-    "href": "survey/n3-rstudio.html#recap",
-    "title": "N3 · Moving to RStudio",
-    "section": "Recap",
-    "text": "Recap\n\n\n\n\n\n\n\nStep\nHow\n\n\n\n\nOpen the project\nDouble-click nhis-project.Rproj\n\n\nInstall a package (once per computer)\ninstall.packages(\"name\") in the Console\n\n\nLoad a package (every script)\nlibrary(name) at the top of the script\n\n\nRun a line / the whole script\nCtrl/Cmd + Enter / Source\n\n\nSave and read an R object\nsaveRDS(x, \"file.rds\"), readRDS(\"file.rds\")\n\n\nCheck a script is complete\nSession &gt; Restart R, then Source",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n3-rstudio.html#next",
-    "href": "survey/n3-rstudio.html#next",
-    "title": "N3 · Moving to RStudio",
-    "section": "Next",
-    "text": "Next\nContinue with N4: Why Weights Matter, which uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "survey/n5-estimates.html",
-    "href": "survey/n5-estimates.html",
-    "title": "N5 · Weighted Estimates",
-    "section": "",
-    "text": "In this lesson you will learn to:\nBefore this lesson: N4: Why Weights Matter. Work in n5.R in your starter project.",
-    "crumbs": [
-      "R for Survey Data",
-      "Lessons (RStudio)",
-      "N5: Weighted Estimates"
-    ]
-  },
-  {
-    "objectID": "survey/n5-estimates.html#setup",
-    "href": "survey/n5-estimates.html#setup",
-    "title": "N5 · Weighted Estimates",
+    "objectID": "survey/n6-regression.html#setup",
+    "href": "survey/n6-regression.html#setup",
+    "title": "N6 · Tests and Regression",
     "section": "1. Setup",
-    "text": "1. Setup\n\nlibrary(tidyverse)\nlibrary(srvyr)\n\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)",
+    "text": "1. Setup\nThis lesson uses functions from the survey package directly, and broom (installed with the tidyverse) to tidy model results.\n\nlibrary(tidyverse)\nlibrary(srvyr)\nlibrary(survey)\nlibrary(broom)\n\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)\n\nsurvivors &lt;- nhis_design %&gt;% filter(survivor == 1)\n\nsurvivors is the design filtered to cancer survivors (the right way, from N5). Everything in this lesson uses it.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#subgroups-filter-the-design-not-the-data",
-    "href": "survey/n5-estimates.html#subgroups-filter-the-design-not-the-data",
-    "title": "N5 · Weighted Estimates",
-    "section": "2. Subgroups: filter the design, not the data",
-    "text": "2. Subgroups: filter the design, not the data\nThe research question is about cancer survivors, a subgroup. There are two ways you might try to focus on them.\nThe right way: build the design from the full file, then filter() the design.\n\nnhis_design %&gt;%\n  filter(survivor == 1, poverty == \"Below 100%\") %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1    0.5760        0.4906        0.6613\n\n\nThe wrong way: filter() the data first, then build the design from what is left.\n\nanalysis %&gt;%\n  filter(survivor == 1, poverty == \"Below 100%\") %&gt;%\n  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\nError in `dplyr::summarise()`:\nℹ In argument: `fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype\n  = \"ci\")`.\nCaused by error in `onestrat()`:\n! Stratum (204) has only one PSU at stage 1\n\n\nAn error. To measure uncertainty, the survey package compares the PSUs within each stratum, so every stratum needs at least two. After cutting the data down to about 200 people, some strata have only one PSU left, and the calculation is impossible.\nFiltering the design instead keeps the full structure of the survey: everyone outside the subgroup stays in the design and simply counts as zero. This is called domain (or subpopulation) estimation, and it is what NCHS recommends in its survey description: analyze subgroups using the full data file.\n\n\n\n\n\n\nWarningWhy not just cut the data when it happens to run?\n\n\n\nFor large subgroups, cutting the data first sometimes runs and gives almost the same answer. But it fails as soon as a subgroup gets small, and searching the error message online leads to settings that silence it without fixing the problem. In other surveys, it can even give a wrong confidence interval with no error at all. Build the design once from the full file, and filter the design. Always.\n\n\nThis is also why lesson N2 kept every adult in the analysis file.",
+    "objectID": "survey/n6-regression.html#testing-an-association-the-design-based-chi-square-test",
+    "href": "survey/n6-regression.html#testing-an-association-the-design-based-chi-square-test",
+    "title": "N6 · Tests and Regression",
+    "section": "2. Testing an association: the design-based chi-square test",
+    "text": "2. Testing an association: the design-based chi-square test\nIn N5 you saw that fair or poor health is much more common among survivors with lower incomes. Could a difference that large arise by chance in a sample this size? A chi-square test answers that for two categorical variables.\nThe ordinary chisq.test() assumes a simple random sample. svychisq() from the survey package uses the Rao-Scott correction, which accounts for weights, strata, and PSUs. It takes a formula naming the two variables, and the design.\n\nsvychisq(~ fair_poor + poverty, design = survivors)\n\n\n    Pearson's X^2: Rao & Scott adjustment\n\ndata:  NextMethod()\nF = 50.493, ndf = 2.9877, ddf = 1640.2560, p-value &lt; 2.2e-16\n\n\nHow to read it:\n\nF is the test statistic. Larger means stronger evidence of an association.\np-value: the probability of an association at least this strong if there really were none in the population. &lt; 2.2e-16 is R’s way of saying “smaller than the smallest number it shows”, so report it as p &lt; 0.001.\n\nThere is very strong evidence that self-rated health is associated with income among U.S. adult cancer survivors.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nTest whether fair or poor health is associated with education among survivors, and then with sex. What do you conclude for each?\nExpected result: education F = 58.1, p &lt; 0.001 (strong evidence of an association); sex F = 0.47, p = 0.49 (no evidence of an association).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsvychisq(~ fair_poor + education, design = survivors)\n\n\n    Pearson's X^2: Rao & Scott adjustment\n\ndata:  NextMethod()\nF = 58.11, ndf = 1.9806, ddf = 1087.3240, p-value &lt; 2.2e-16\n\nsvychisq(~ fair_poor + sex, design = survivors)\n\n\n    Pearson's X^2: Rao & Scott adjustment\n\ndata:  NextMethod()\nF = 0.47132, ndf = 1, ddf = 549, p-value = 0.4927\n\n\nA large p-value does not prove that men and women have the same rate. It means this sample gives no evidence of a difference.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#the-income-gradient-among-survivors",
-    "href": "survey/n5-estimates.html#the-income-gradient-among-survivors",
-    "title": "N5 · Weighted Estimates",
-    "section": "3. The income gradient among survivors",
-    "text": "3. The income gradient among survivors\nNow the core of the project. For survivors, estimate the percent in fair or poor health in each income group. Two additions to what you know:\n\nfilter(!is.na(fair_poor)) on the design leaves out the 2 survivors without an answer, so the counts describe exactly the people in each estimate.\nunweighted(n()) counts the people in the sample behind each estimate. Always report it next to weighted estimates.\n\n\nby_poverty &lt;- nhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor)) %&gt;%\n  group_by(poverty) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nby_poverty\n\n# A tibble: 4 × 5\n  poverty          n fair_poor fair_poor_low fair_poor_upp\n  &lt;fct&gt;        &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 Below 100%     206     57.60         49.13         66.06\n2 100-199%       495     43.68         38.17         49.19\n3 200-399%       891     27.44         23.78         31.10\n4 400% or more  1239     16.86         14.34         19.38\n\n\nA steep gradient: among survivors living below the poverty line, more than half report fair or poor health; among those with family income at least four times the poverty line, about one in six do. The confidence intervals of the lowest and highest groups are far apart, so this is not just sampling noise.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nDo the same for education among survivors. Remember to leave out missing education.\nExpected result: High school or less 40.2% (95% CI 36.1 to 44.2); Some college 28.6% (24.9 to 32.3); Bachelor or higher 14.7% (12.4 to 17.0).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %&gt;%\n  group_by(education) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 3 × 5\n  education               n fair_poor fair_poor_low fair_poor_upp\n  &lt;fct&gt;               &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 High school or less   867     40.17         36.13         44.20\n2 Some college          846     28.60         24.87         32.33\n3 Bachelor or higher   1109     14.73         12.41         17.05",
+    "objectID": "survey/n6-regression.html#why-regression",
+    "href": "survey/n6-regression.html#why-regression",
+    "title": "N6 · Tests and Regression",
+    "section": "3. Why regression?",
+    "text": "3. Why regression?\nIncome and education go together: people with more education tend to have higher incomes. So is the income gradient really about income, or partly about education? Regression estimates the association of each variable with the outcome while holding the others constant. This is called adjusting for them.\nThe outcome, fair_poor, is 0 or 1, so the model is logistic regression. Its results are odds ratios.\n\nOdds and odds ratios\nIf 25% of a group report fair or poor health, their odds are 25 to 75, or 0.33. An odds ratio (OR) compares the odds in two groups:\n\nOR = 1: same odds\nOR = 2: twice the odds\nOR = 0.5: half the odds\n\nEvery OR compares a group with a reference group. By default, R uses the first category of a factor. For poverty, that is “Below 100%”, which would give odds ratios below 1 for the other groups. Results are usually easier to read when the reference is the most advantaged group, so that every OR describes how much higher the odds are in a less advantaged group. fct_relevel() moves a category to the front.\n\nsurvivors &lt;- survivors %&gt;%\n  mutate(\n    poverty = fct_relevel(poverty, \"400% or more\"),\n    education = fct_relevel(education, \"Bachelor or higher\")\n  )",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#when-an-estimate-is-too-uncertain",
-    "href": "survey/n5-estimates.html#when-an-estimate-is-too-uncertain",
-    "title": "N5 · Weighted Estimates",
-    "section": "4. When an estimate is too uncertain",
-    "text": "4. When an estimate is too uncertain\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nNow estimate fair or poor health among survivors with and without health insurance. Look closely at n and at the confidence intervals. What do you notice?\nExpected result: insured 27.4% (95% CI 25.3 to 29.5), based on 2,783 people; uninsured 29.0%, based on only 44 people, with a confidence interval from about 12% to 46%.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(insured)) %&gt;%\n  group_by(insured) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 2 × 5\n  insured     n fair_poor fair_poor_low fair_poor_upp\n  &lt;chr&gt;   &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1 No         44     28.95         12.40         45.51\n2 Yes      2783     27.39         25.30         29.49\n\n\nMost survivors are 65 or older and covered by Medicare, so only 44 uninsured survivors (with an answer about their health) were interviewed. The estimate for them, 29%, is compatible with anything from about 12% to 46%: it says almost nothing. Do not report a number like this as a finding. Lesson N7 covers NCHS’s rules for when an estimate is too unreliable to publish.\n\n\n\nThe habit to take away: always look at n and the width of the confidence interval before you look at the estimate.",
+    "objectID": "survey/n6-regression.html#a-first-model-income-alone",
+    "href": "survey/n6-regression.html#a-first-model-income-alone",
+    "title": "N6 · Tests and Regression",
+    "section": "4. A first model: income alone",
+    "text": "4. A first model: income alone\nsvyglm() fits regression models on a survey design. It looks like glm(), with two differences: the data go in design =, and the family is quasibinomial(). (binomial() gives the same estimates but prints warnings about non-whole-number weights; quasibinomial() avoids them.)\n\nmodel_crude &lt;- svyglm(fair_poor ~ poverty, design = survivors, family = quasibinomial())\n\ntidy(model_crude, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 4 × 5\n  term              estimate conf.low conf.high   p.value\n  &lt;chr&gt;                &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;\n1 (Intercept)         0.2028   0.1695    0.2427 1.547e-54\n2 povertyBelow 100%   6.698    4.555     9.849  1.347e-20\n3 poverty100-199%     3.824    2.882     5.076  3.125e-19\n4 poverty200-399%     1.865    1.433     2.427  4.206e- 6\n\n\ntidy() from broom turns the model into a table. exponentiate = TRUE converts the model’s coefficients into odds ratios, and conf.int = TRUE adds 95% confidence intervals (conf.low, conf.high). select() keeps just the columns you need to read.\nRead the estimate column. Compared with survivors whose family income is at least four times the poverty line, the odds of fair or poor health are about 1.9 times as high at 200-399%, 3.8 times as high at 100-199%, and 6.7 times as high below the poverty line. (Ignore the intercept row; it is the odds in the reference group, not a comparison.)\nThis is a crude (unadjusted) model: income alone.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#survivors-compared-with-everyone-else",
-    "href": "survey/n5-estimates.html#survivors-compared-with-everyone-else",
-    "title": "N5 · Weighted Estimates",
-    "section": "5. Survivors compared with everyone else",
-    "text": "5. Survivors compared with everyone else\nIs poor health among low-income survivors just about income? Compare survivors and non-survivors at each income level by grouping by both.\n\nby_both &lt;- nhis_design %&gt;%\n  filter(!is.na(survivor), !is.na(fair_poor)) %&gt;%\n  group_by(survivor, poverty) %&gt;%\n  summarize(\n    n = unweighted(n()),\n    fair_poor = survey_mean(fair_poor, vartype = \"ci\")\n  ) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nby_both\n\n# A tibble: 8 × 6\n# Groups:   survivor [2]\n  survivor poverty          n fair_poor fair_poor_low fair_poor_upp\n     &lt;dbl&gt; &lt;fct&gt;        &lt;int&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1        0 Below 100%    2004    28.09         25.66         30.51 \n2        0 100-199%      3681    22.66         20.96         24.35 \n3        0 200-399%      6399    12.82         11.80         13.84 \n4        0 400% or more  9260     7.051         6.434         7.668\n5        1 Below 100%     206    57.60         49.13         66.06 \n6        1 100-199%       495    43.68         38.17         49.19 \n7        1 200-399%       891    27.44         23.78         31.10 \n8        1 400% or more  1239    16.86         14.34         19.38 \n\n\nAt every income level, survivors are roughly twice as likely as other adults to report fair or poor health. And the income gradient appears in both groups. A table this size is hard to take in; a plot is better.",
+    "objectID": "survey/n6-regression.html#adjusting-for-other-variables",
+    "href": "survey/n6-regression.html#adjusting-for-other-variables",
+    "title": "N6 · Tests and Regression",
+    "section": "5. Adjusting for other variables",
+    "text": "5. Adjusting for other variables\nAdd education, age group, and sex to the formula with +.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nFit model_adjusted: fair_poor explained by poverty, education, age_group, and sex. Show its odds ratios with tidy(). How does the odds ratio for “Below 100%” change compared with the crude model?\nExpected result: the odds ratio for income below the poverty line falls from 6.7 (95% CI 4.6 to 9.8) to 4.7 (3.1 to 7.2). It is smaller, but still large.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmodel_adjusted &lt;- svyglm(fair_poor ~ poverty + education + age_group + sex,\n                         design = survivors, family = quasibinomial())\n\ntidy(model_adjusted, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 9 × 5\n  term                         estimate conf.low conf.high   p.value\n  &lt;chr&gt;                           &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;\n1 (Intercept)                    0.1181  0.07101    0.1963 1.160e-15\n2 povertyBelow 100%              4.717   3.098      7.181  1.461e-12\n3 poverty100-199%                2.959   2.170      4.035  1.786e-11\n4 poverty200-399%                1.545   1.171      2.039  2.153e- 3\n5 educationHigh school or less   2.533   1.912      3.355  1.946e-10\n6 educationSome college          1.757   1.341      2.304  4.914e- 5\n7 age_group45-64                 1.118   0.6721     1.860  6.670e- 1\n8 age_group65+                   1.056   0.6435     1.733  8.287e- 1\n9 sexMale                        1.212   0.9740     1.508  8.466e- 2\n\n\n\n\n\nHow to read the adjusted model:\n\nIncome: among survivors with the same education, age group, and sex, those below the poverty line have about 4.7 times the odds of fair or poor health of those at 400% or more. Part of the crude association was education; most of it remains.\nEducation: with income held constant, survivors with a high school education or less have about 2.5 times the odds of those with a bachelor’s degree. Income and education each matter.\nAge group and sex: the confidence intervals include 1, so there is no clear evidence that either is associated with fair or poor health once income and education are accounted for.\n\nThe model used 2818 survivors: people with a missing value in any variable in the formula are left out automatically.\n\n\n\n\n\n\nWarningOdds ratios are not risk ratios\n\n\n\nAn odds ratio of 4.7 does not mean “4.7 times as likely”. When an outcome is common (here more than one survivor in four), odds ratios are noticeably larger than ratios of percentages. In N5, the percentages were 57.6% and 16.9%, a ratio of about 3.4. Say “odds”, not “likelihood” or “risk”, when you report odds ratios.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#plotting-estimates-with-confidence-intervals",
-    "href": "survey/n5-estimates.html#plotting-estimates-with-confidence-intervals",
-    "title": "N5 · Weighted Estimates",
-    "section": "6. Plotting estimates with confidence intervals",
-    "text": "6. Plotting estimates with confidence intervals\ngeom_pointrange() draws each estimate as a point with a line for its confidence interval. It needs y for the estimate and ymin and ymax for the limits. expand_limits(y = 0) makes the axis start at zero, so differences are not visually exaggerated.\n\nggplot(by_poverty, aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +\n  geom_pointrange() +\n  expand_limits(y = 0) +\n  labs(\n    x = \"Family income (percent of poverty line)\",\n    y = \"Fair or poor health (%)\",\n    title = \"Cancer survivors, NHIS 2025\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\nTo show two groups side by side, map one of them to color and nudge the points apart with position_dodge(). factor() turns the 0/1 survivor column into labels for the legend.\n\nby_both %&gt;%\n  mutate(group = factor(survivor, levels = c(1, 0), labels = c(\"Cancer survivors\", \"Other adults\"))) %&gt;%\n  ggplot(aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp, color = group)) +\n  geom_pointrange(position = position_dodge(width = 0.4)) +\n  expand_limits(y = 0) +\n  labs(\n    x = \"Family income (percent of poverty line)\",\n    y = \"Fair or poor health (%)\",\n    color = NULL,\n    title = \"Fair or poor health by income, NHIS 2025\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nMake the first kind of plot for education among survivors: one point and interval for each education group.\nExpected result: three points falling from about 40% to about 15%, with intervals that do not overlap between the lowest and highest groups.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nby_education &lt;- nhis_design %&gt;%\n  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %&gt;%\n  group_by(education) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\nggplot(by_education, aes(x = education, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +\n  geom_pointrange() +\n  expand_limits(y = 0) +\n  labs(x = NULL, y = \"Fair or poor health (%)\", title = \"Cancer survivors, NHIS 2025\") +\n  theme_minimal()",
+    "objectID": "survey/n6-regression.html#testing-a-whole-variable",
+    "href": "survey/n6-regression.html#testing-a-whole-variable",
+    "title": "N6 · Tests and Regression",
+    "section": "6. Testing a whole variable",
+    "text": "6. Testing a whole variable\nPoverty has three odds ratios. To ask one question, “is income associated with the outcome, after adjustment?”, test all three together with regTermTest():\n\nregTermTest(model_adjusted, ~ poverty)\n\nWald test for poverty\n in svyglm(formula = fair_poor ~ poverty + education + age_group + \n    sex, design = survivors, family = quasibinomial())\nF =  25.55712  on  3  and  541  df: p= 1.7848e-15 \n\n\np &lt; 0.001: strong evidence that income is associated with fair or poor health among survivors, independent of education, age, and sex.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#what-the-estimates-do-and-do-not-show",
-    "href": "survey/n5-estimates.html#what-the-estimates-do-and-do-not-show",
-    "title": "N5 · Weighted Estimates",
-    "section": "7. What the estimates do and do not show",
-    "text": "7. What the estimates do and do not show\nThese are descriptive estimates: they describe how fair or poor health is distributed among U.S. adult cancer survivors. They do not explain why. Income and education are related to each other, to age, and to the kinds of cancer people have had. Separating these influences takes a regression model, which is lesson N6.",
+    "objectID": "survey/n6-regression.html#what-happens-if-you-ignore-the-design",
+    "href": "survey/n6-regression.html#what-happens-if-you-ignore-the-design",
+    "title": "N6 · Tests and Regression",
+    "section": "7. What happens if you ignore the design?",
+    "text": "7. What happens if you ignore the design?\nHere is the same adjusted model fitted with ordinary glm(): no weights, no strata, no PSUs.\n\nunweighted_model &lt;- glm(\n  fair_poor ~ poverty + education + age_group + sex,\n  data = analysis %&gt;%\n    filter(survivor == 1) %&gt;%\n    mutate(\n      poverty = fct_relevel(poverty, \"400% or more\"),\n      education = fct_relevel(education, \"Bachelor or higher\")\n    ),\n  family = binomial()\n)\n\ntidy(unweighted_model, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  filter(term == \"sexMale\") %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 1 × 5\n  term    estimate conf.low conf.high  p.value\n  &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;\n1 sexMale    1.299    1.084     1.555 0.004510\n\n\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nCompare the sexMale row of unweighted_model with the same row of model_adjusted. Would the two models lead you to the same conclusion about sex?\nExpected result: no. The unweighted model gives OR 1.30 with p = 0.005, which looks like clear evidence that men have higher odds. The design-based model gives OR 1.21 with p = 0.085 and a confidence interval that includes 1: no clear evidence.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ntidy(model_adjusted, exponentiate = TRUE, conf.int = TRUE) %&gt;%\n  filter(term == \"sexMale\") %&gt;%\n  select(term, estimate, conf.low, conf.high, p.value)\n\n# A tibble: 1 × 5\n  term    estimate conf.low conf.high p.value\n  &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;\n1 sexMale    1.212   0.9740     1.508 0.08466\n\n\nIgnoring the design changed both the estimate (the weights) and the uncertainty (the strata and PSUs), and together they turned “no clear evidence” into a “significant” finding. A paper built on the unweighted model would report a sex difference that the data do not support.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#recap",
-    "href": "survey/n5-estimates.html#recap",
-    "title": "N5 · Weighted Estimates",
+    "objectID": "survey/n6-regression.html#reporting-results",
+    "href": "survey/n6-regression.html#reporting-results",
+    "title": "N6 · Tests and Regression",
+    "section": "8. Reporting results",
+    "text": "8. Reporting results\nA typical results sentence:\n\nAmong U.S. adult cancer survivors, fair or poor self-rated health was strongly associated with family income. After adjustment for education, age, and sex, survivors with family income below the federal poverty line had 4.7 times the odds of fair or poor health of those with income at or above 400% of the poverty line (OR 4.72, 95% CI 3.10 to 7.18).\n\nAnd in the methods: the survey-weighted logistic regression, the software (R with the survey and srvyr packages), and that variance was estimated using the NHIS strata and PSUs. Lesson N7 puts this together.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N6: Tests and Regression"
+    ]
+  },
+  {
+    "objectID": "survey/n6-regression.html#recap",
+    "href": "survey/n6-regression.html#recap",
+    "title": "N6 · Tests and Regression",
     "section": "Recap",
-    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nnhis_design %&gt;% filter(...)\nEstimate for a subgroup, keeping the full design\n\n\nunweighted(n())\nNumber of people in the sample behind an estimate\n\n\ngroup_by(a, b) on the design\nEstimates for every combination of two variables\n\n\ngeom_pointrange(aes(y, ymin, ymax))\nPlot estimates with their confidence intervals\n\n\nposition_dodge(width = 0.4)\nPlace groups side by side\n\n\nexpand_limits(y = 0)\nStart the axis at zero\n\n\n\nThe rules: build the design from the full file and filter the design; report n with every estimate; check the confidence interval before trusting the estimate.",
+    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nsvychisq(~ a + b, design = d)\nChi-square test with the Rao-Scott design correction\n\n\nfct_relevel(x, \"level\")\nMake “level” the reference category\n\n\nsvyglm(y ~ x1 + x2, design = d, family = quasibinomial())\nSurvey-weighted logistic regression\n\n\ntidy(model, exponentiate = TRUE, conf.int = TRUE)\nOdds ratios with 95% confidence intervals\n\n\nregTermTest(model, ~ x)\nTest all categories of one variable together",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   },
   {
-    "objectID": "survey/n5-estimates.html#next",
-    "href": "survey/n5-estimates.html#next",
-    "title": "N5 · Weighted Estimates",
+    "objectID": "survey/n6-regression.html#next",
+    "href": "survey/n6-regression.html#next",
+    "title": "N6 · Tests and Regression",
     "section": "Next",
-    "text": "Next\nContinue with N6: Tests and Regression: testing whether differences are larger than chance, and estimating the income gradient while accounting for age, sex, and education.",
+    "text": "Next\nContinue with N7: Your Own Project: organizing a project, NCHS’s rules for when an estimate is too unreliable to publish, and writing up your methods.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
-      "N5: Weighted Estimates"
+      "N6: Tests and Regression"
     ]
   }
 ]
