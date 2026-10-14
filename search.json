@@ -1,5 +1,250 @@
 [
   {
+    "objectID": "survey/n4-weights.html",
+    "href": "survey/n4-weights.html",
+    "title": "N4 · Why Weights Matter",
+    "section": "",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N3: Moving to RStudio. Work in n4.R in your starter project.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#setup",
+    "href": "survey/n4-weights.html#setup",
+    "title": "N4 · Why Weights Matter",
+    "section": "1. Setup",
+    "text": "1. Setup\nStart n4.R with these lines. Every lesson script from now on starts the same way.\n\nlibrary(tidyverse)\nlibrary(srvyr)\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\nIf readRDS() says the file does not exist, run prepare.R first (N3, section 6).",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#what-a-weight-is",
+    "href": "survey/n4-weights.html#what-a-weight-is",
+    "title": "N4 · Why Weights Matter",
+    "section": "2. What a weight is",
+    "text": "2. What a weight is\nEach adult in the file has a weight, WTFA_A: the number of U.S. adults that person stands for.\n\nsummary(analysis$WTFA_A)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n   2358    5835    9020   10936   13371   45481 \n\n\nThe median person stands for about 9,000 adults, but weights range from about 2,400 to 45,000. Someone with a weight of 45,000 belongs to a group that was hard to reach or less likely to respond, so each person interviewed from that group has to stand for many more people. Someone with a small weight belongs to a group that was easy to reach.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nAdd up all the weights with sum(). What does the total represent?\nExpected result: 264,821,349, about 265 million: the number of U.S. adults the survey represents (adults living in households, not in institutions such as nursing homes or prisons).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsum(analysis$WTFA_A)\n\n[1] 264821349",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#unweighted-versus-weighted",
+    "href": "survey/n4-weights.html#unweighted-versus-weighted",
+    "title": "N4 · Why Weights Matter",
+    "section": "3. Unweighted versus weighted",
+    "text": "3. Unweighted versus weighted\nHow many U.S. adults are 65 or older? Here is the share of the sample, and the share once each person counts as many people as their weight says. weighted.mean() does that.\n\nanalysis %&gt;%\n  filter(!is.na(age_group)) %&gt;%\n  summarize(\n    unweighted = 100 * mean(age_group == \"65+\"),\n    weighted   = 100 * weighted.mean(age_group == \"65+\", WTFA_A)\n  )\n\n# A tibble: 1 × 2\n  unweighted weighted\n       &lt;dbl&gt;    &lt;dbl&gt;\n1      35.06    23.26\n\n\nMore than a third of the people interviewed are 65 or older, but they make up less than a quarter of U.S. adults. Older adults are more likely to live alone or with just one other adult (and only one adult per household is interviewed), and they are more likely to take part, so the sample has too many of them. Each of them gets a smaller weight to make up for it.\nThis matters for the project because cancer is much more common at older ages. Any unweighted estimate about survivors leans toward older people.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nWhat percent of U.S. adults are cancer survivors? Calculate it unweighted and weighted, leaving out people with missing survivor.\nExpected result: 11.7% unweighted, 8.7% weighted.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nanalysis %&gt;%\n  filter(!is.na(survivor)) %&gt;%\n  summarize(\n    unweighted = 100 * mean(survivor),\n    weighted   = 100 * weighted.mean(survivor, WTFA_A)\n  )\n\n# A tibble: 1 × 2\n  unweighted weighted\n       &lt;dbl&gt;    &lt;dbl&gt;\n1      11.72    8.703",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#why-weights-are-not-enough",
+    "href": "survey/n4-weights.html#why-weights-are-not-enough",
+    "title": "N4 · Why Weights Matter",
+    "section": "4. Why weights are not enough",
+    "text": "4. Why weights are not enough\nweighted.mean() gives the right estimate. It cannot tell you how certain that estimate is, and every estimate from a sample needs a measure of uncertainty, usually a 95% confidence interval.\nUncertainty depends on how the sample was drawn, and the NHIS was not drawn one person at a time:\n\nClusters (sampling units). The NHIS first picks geographic areas, then households within them. People in the same area tend to be alike, so 30 people from one area tell you less than 30 people from 30 different areas. The column PPSU records each person’s primary sampling unit (PSU).\nStrata. The country is first divided into groups of areas called strata, and areas are picked within each one. This makes estimates more precise. The column PSTRAT records the stratum.\n\nSoftware that ignores clusters treats everyone as independent, and its confidence intervals come out too narrow: they claim more certainty than the data support.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#the-survey-design-object",
+    "href": "survey/n4-weights.html#the-survey-design-object",
+    "title": "N4 · Why Weights Matter",
+    "section": "5. The survey design object",
+    "text": "5. The survey design object\nThe srvyr package stores the data together with the design in one object. Everything after this works on that object instead of on analysis.\n\nnhis_design &lt;- analysis %&gt;%\n  as_survey_design(\n    ids = PPSU,          # primary sampling units (clusters)\n    strata = PSTRAT,     # strata\n    weights = WTFA_A,    # weights\n    nest = TRUE          # PSU numbers restart within each stratum\n  )\n\nnhis_design\n\nStratified 1 - level Cluster Sampling design (with replacement)\nWith (608) clusters.\nCalled via srvyr\nSampling variables:\n  - ids: PPSU \n  - strata: PSTRAT \n  - weights: WTFA_A \nData variables: \n  - HHX (chr), WTFA_A (dbl), PSTRAT (dbl), PPSU (dbl), fair_poor (dbl),\n    survivor (dbl), poverty (fct), education (fct), age (dbl), age_group (chr),\n    sex (chr), insured (chr)\n\n\nEach argument names a column from the file. These four lines come straight from NCHS’s own instructions for analyzing the NHIS in R, in the 2025 survey description.\n\n\n\n\n\n\nNoteWhy nest = TRUE?\n\n\n\nPSU numbers are only unique within a stratum: two different areas in two different strata can share a number.\n\nn_distinct(analysis$PPSU)                     # PSU numbers\n\n[1] 606\n\nnrow(distinct(analysis, PSTRAT, PPSU))        # actual PSUs\n\n[1] 608\n\n\nnest = TRUE tells R to identify a PSU by its stratum and its number. Without it, R would merge areas that are really separate.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#estimates-with-confidence-intervals",
+    "href": "survey/n4-weights.html#estimates-with-confidence-intervals",
+    "title": "N4 · Why Weights Matter",
+    "section": "6. Estimates with confidence intervals",
+    "text": "6. Estimates with confidence intervals\nUse summarize() on the design object, with survey_mean() in place of mean(). vartype = \"ci\" asks for a 95% confidence interval, and na.rm = TRUE leaves out missing values.\n\nnhis_design %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\"))\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1    0.1472        0.1409        0.1534\n\n\nsurvey_mean() gives a proportion. About 14.7% of U.S. adults report fair or poor health, and the 95% confidence interval runs from 14.1% to 15.3%. (The unweighted figure would have been 15.8%.)\ngroup_by() works on the design just as it does on a dataframe.\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nEstimate the percent in fair or poor health for survivors and non-survivors, with 95% confidence intervals. Start from nhis_design, remove missing survivor with filter(), then use group_by() and survey_mean(). Multiply by 100 with mutate() if you like.\nExpected result: survivors 27.4% (95% CI 25.3% to 29.5%); non-survivors 13.5% (12.9% to 14.1%).\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  filter(!is.na(survivor)) %&gt;%\n  group_by(survivor) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"fair_poor\"), ~ 100 * .x))\n\n# A tibble: 2 × 4\n  survivor fair_poor fair_poor_low fair_poor_upp\n     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1        0     13.50         12.87         14.14\n2        1     27.42         25.34         29.51\n\n\nacross(starts_with(\"fair_poor\"), ~ 100 * .x) multiplies every column whose name starts with fair_poor (the estimate and both limits) by 100.\n\n\n\nAmong survivors, the weighted estimate (27.4%) is close to the unweighted one from N2 (26.9%). Weighting does not always change an estimate much, as here, but sometimes it does, as with age. You only know by doing it.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#seeing-what-the-design-does",
+    "href": "survey/n4-weights.html#seeing-what-the-design-does",
+    "title": "N4 · Why Weights Matter",
+    "section": "7. Seeing what the design does",
+    "text": "7. Seeing what the design does\nHere is the same estimate, fair or poor health among survivors, calculated three ways.\n\n# 1. Ignoring the design: a simple confidence interval for a proportion\nsurv &lt;- analysis %&gt;% filter(survivor == 1, !is.na(fair_poor))\np &lt;- mean(surv$fair_poor)\nse &lt;- sqrt(p * (1 - p) / nrow(surv))\nc(estimate = p, low = p - 1.96 * se, high = p + 1.96 * se) * 100\n\nestimate      low     high \n26.88096 25.24782 28.51410 \n\n# 2. Weights only\nanalysis %&gt;%\n  as_survey_design(weights = WTFA_A) %&gt;%\n  filter(survivor == 1) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\") * 100)\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1     27.42         25.45         29.39\n\n# 3. The full design\nnhis_design %&gt;%\n  filter(survivor == 1) %&gt;%\n  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = \"ci\") * 100)\n\n# A tibble: 1 × 3\n  fair_poor fair_poor_low fair_poor_upp\n      &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;\n1     27.42         25.34         29.51\n\n\n\n\n\nMethod\nEstimate\n95% CI\nWidth\n\n\n\n\nIgnoring the design\n26.9%\n25.2 to 28.5\n3.3\n\n\nWeights only\n27.4%\n25.5 to 29.4\n3.9\n\n\nFull design\n27.4%\n25.3 to 29.5\n4.2\n\n\n\n\nThe weights fix the estimate (26.9% becomes 27.4%).\nThe strata and PSUs fix the uncertainty: the honest interval is about a quarter wider than the naive one.\n\nThe difference here is modest. For smaller groups and for variables that cluster strongly by place, such as income, it can be much larger. Since you cannot know in advance, always use the full design.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#from-percentages-to-people",
+    "href": "survey/n4-weights.html#from-percentages-to-people",
+    "title": "N4 · Why Weights Matter",
+    "section": "8. From percentages to people",
+    "text": "8. From percentages to people\nWeights also turn counts of people in the sample into counts of people in the country. survey_total() adds up the weights.\n\n\n\n\n\n\nNoteYour turn 4\n\n\n\nHow many U.S. adults are cancer survivors? Use group_by(survivor) and survey_total(vartype = \"ci\") on nhis_design. Dividing by 1e6 (one million) makes the numbers easier to read.\nExpected result: about 23.0 million survivors (95% CI 21.8 to 24.2 million). The other rows are non-survivors and people with missing survivor.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nnhis_design %&gt;%\n  group_by(survivor) %&gt;%\n  summarize(adults = survey_total(vartype = \"ci\")) %&gt;%\n  mutate(across(starts_with(\"adults\"), ~ .x / 1e6))   # in millions\n\n# A tibble: 3 × 4\n  survivor   adults adults_low adults_upp\n     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;\n1        0 241.5      233.8      249.2   \n2        1  23.02      21.83      24.22  \n3       NA   0.2731     0.1688     0.3774\n\n\n2,833 people in the sample stand for about 23 million U.S. adults. (Remember the definition from N2: non-melanoma skin cancer alone does not count.)",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#recap",
+    "href": "survey/n4-weights.html#recap",
+    "title": "N4 · Why Weights Matter",
+    "section": "Recap",
+    "text": "Recap\n\n\n\n\n\n\n\nCode\nWhat it does\n\n\n\n\nweighted.mean(x, w)\nWeighted mean or proportion, without uncertainty\n\n\nas_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)\nThe NHIS design object\n\n\nsurvey_mean(x, na.rm = TRUE, vartype = \"ci\")\nWeighted mean or proportion with a 95% CI\n\n\nsurvey_total(vartype = \"ci\")\nEstimated number of people, with a 95% CI\n\n\ngroup_by() on the design\nEstimates for each group\n\n\n\nThe rule: weights for the estimate; strata and PSUs for the uncertainty; always all three.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/n4-weights.html#next",
+    "href": "survey/n4-weights.html#next",
+    "title": "N4 · Why Weights Matter",
+    "section": "Next",
+    "text": "Next\nN5: Weighted Estimates is coming soon: estimates for subgroups, why you filter the design and never the data, comparing socioeconomic groups, and plotting estimates with confidence intervals.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N4: Why Weights Matter"
+    ]
+  },
+  {
+    "objectID": "survey/index.html",
+    "href": "survey/index.html",
+    "title": "R for Survey Data",
+    "section": "",
+    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "survey/index.html#lessons",
+    "href": "survey/index.html#lessons",
+    "title": "R for Survey Data",
+    "section": "Lessons",
+    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nReady\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nReady\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nPlanned\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nPlanned\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html",
+    "href": "foundations/index.html",
+    "title": "R Foundations",
+    "section": "",
+    "text": "A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#how-to-use-the-notebooks",
+    "href": "foundations/index.html#how-to-use-the-notebooks",
+    "title": "R Foundations",
+    "section": "How to use the notebooks",
+    "text": "How to use the notebooks\n\nClick a notebook link below.\nSign in with a Google account.\nChoose File &gt; Save a copy in Drive and work in your copy. If you skip this step, your work is lost when you close the tab.\nRun the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#notebooks",
+    "href": "foundations/index.html#notebooks",
+    "title": "R Foundations",
+    "section": "Notebooks",
+    "text": "Notebooks\n\n\n\nNotebook\nCovers\n\n\n\n\nF1: First Steps in R\nRunning code, arithmetic, variables, functions, reading error messages\n\n\nF2: Vectors and Data Types\nVectors, numbers vs. text, TRUE/FALSE, dates, missing values\n\n\nF3: Dataframes\nBuilding and inspecting a table; one row per person or many\n\n\nF4: Choosing Rows and Columns\nPackages, select(), filter(), the pipe\n\n\nF5: New Columns and Data Files\nmutate(), if_else(), reading a CSV file, exploring a new dataset\n\n\nF6: Combining Tables\nInner and left joins, missing values from joins, duplicated rows",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#where-next",
+    "href": "foundations/index.html#where-next",
+    "title": "R Foundations",
+    "section": "Where next",
+    "text": "Where next\n\nWorking with All of Us data? Continue with R for All of Us.\nWorking with national survey data? Continue with R for Survey Data.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html",
+    "href": "aou/index.html",
+    "title": "R for All of Us",
+    "section": "",
+    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-a-write-it-yourself",
+    "href": "aou/index.html#path-a-write-it-yourself",
+    "title": "R for All of Us",
+    "section": "Path A: Write It Yourself",
+    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-b-ai-assisted",
+    "href": "aou/index.html#path-b-ai-assisted",
+    "title": "R for All of Us",
+    "section": "Path B: AI-Assisted",
+    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Tutorials",
+    "section": "",
+    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
+  },
+  {
+    "objectID": "index.html#how-the-tutorials-work",
+    "href": "index.html#how-the-tutorials-work",
+    "title": "Tutorials",
+    "section": "How the tutorials work",
+    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
+  },
+  {
     "objectID": "survey/n3-rstudio.html",
     "href": "survey/n3-rstudio.html",
     "title": "N3 · Moving to RStudio",
@@ -124,124 +369,11 @@
     "href": "survey/n3-rstudio.html#next",
     "title": "N3 · Moving to RStudio",
     "section": "Next",
-    "text": "Next\nN4: Why Weights Matter is coming soon. It uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.",
+    "text": "Next\nContinue with N4: Why Weights Matter, which uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.",
     "crumbs": [
       "R for Survey Data",
       "Lessons (RStudio)",
       "N3: Moving to RStudio"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Tutorials",
-    "section": "",
-    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
-  },
-  {
-    "objectID": "index.html#how-the-tutorials-work",
-    "href": "index.html#how-the-tutorials-work",
-    "title": "Tutorials",
-    "section": "How the tutorials work",
-    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
-  },
-  {
-    "objectID": "aou/index.html",
-    "href": "aou/index.html",
-    "title": "R for All of Us",
-    "section": "",
-    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html#path-a-write-it-yourself",
-    "href": "aou/index.html#path-a-write-it-yourself",
-    "title": "R for All of Us",
-    "section": "Path A: Write It Yourself",
-    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "aou/index.html#path-b-ai-assisted",
-    "href": "aou/index.html#path-b-ai-assisted",
-    "title": "R for All of Us",
-    "section": "Path B: AI-Assisted",
-    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html",
-    "href": "foundations/index.html",
-    "title": "R Foundations",
-    "section": "",
-    "text": "A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#how-to-use-the-notebooks",
-    "href": "foundations/index.html#how-to-use-the-notebooks",
-    "title": "R Foundations",
-    "section": "How to use the notebooks",
-    "text": "How to use the notebooks\n\nClick a notebook link below.\nSign in with a Google account.\nChoose File &gt; Save a copy in Drive and work in your copy. If you skip this step, your work is lost when you close the tab.\nRun the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#notebooks",
-    "href": "foundations/index.html#notebooks",
-    "title": "R Foundations",
-    "section": "Notebooks",
-    "text": "Notebooks\n\n\n\nNotebook\nCovers\n\n\n\n\nF1: First Steps in R\nRunning code, arithmetic, variables, functions, reading error messages\n\n\nF2: Vectors and Data Types\nVectors, numbers vs. text, TRUE/FALSE, dates, missing values\n\n\nF3: Dataframes\nBuilding and inspecting a table; one row per person or many\n\n\nF4: Choosing Rows and Columns\nPackages, select(), filter(), the pipe\n\n\nF5: New Columns and Data Files\nmutate(), if_else(), reading a CSV file, exploring a new dataset\n\n\nF6: Combining Tables\nInner and left joins, missing values from joins, duplicated rows",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "foundations/index.html#where-next",
-    "href": "foundations/index.html#where-next",
-    "title": "R Foundations",
-    "section": "Where next",
-    "text": "Where next\n\nWorking with All of Us data? Continue with R for All of Us.\nWorking with national survey data? Continue with R for Survey Data.",
-    "crumbs": [
-      "R Foundations",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "survey/index.html",
-    "href": "survey/index.html",
-    "title": "R for Survey Data",
-    "section": "",
-    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
-    "crumbs": [
-      "R for Survey Data",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "survey/index.html#lessons",
-    "href": "survey/index.html#lessons",
-    "title": "R for Survey Data",
-    "section": "Lessons",
-    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nReady\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nPlanned\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nPlanned\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nPlanned\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
-    "crumbs": [
-      "R for Survey Data",
-      "Overview"
     ]
   }
 ]
