@@ -1,23 +1,180 @@
 [
   {
-    "objectID": "survey/index.html",
-    "href": "survey/index.html",
-    "title": "R for Survey Data",
+    "objectID": "survey/n3-rstudio.html",
+    "href": "survey/n3-rstudio.html",
+    "title": "N3 · Moving to RStudio",
     "section": "",
-    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
+    "text": "In this lesson you will learn to:\nBefore this lesson: N2: Preparing Variables.",
     "crumbs": [
       "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#why-move",
+    "href": "survey/n3-rstudio.html#why-move",
+    "title": "N3 · Moving to RStudio",
+    "section": "1. Why move?",
+    "text": "1. Why move?\nColab was a good place to start: nothing to install. For a real project it has three problems:\n\nEverything disappears when the session ends: your data, your files, and every package you installed.\nPackages must be reinstalled every session. The survey packages used from N4 on take a while to install.\nReal projects have many files (data, scripts, results) that need to stay together.\n\nRStudio runs on your own computer. You install things once, and your files stay where you put them. From here on, you will read each lesson on this website and type the code into RStudio.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#install-r-and-rstudio",
+    "href": "survey/n3-rstudio.html#install-r-and-rstudio",
+    "title": "N3 · Moving to RStudio",
+    "section": "2. Install R and RStudio",
+    "text": "2. Install R and RStudio\nYou need two programs, installed in this order:\n\nR, the language itself: download it from CRAN. Choose your operating system (for a Mac, choose the version that matches your processor: Apple silicon or Intel) and install it with the default settings.\nRStudio Desktop, the program you work in: download it from Posit and install it.\n\nYou only ever open RStudio. It finds R by itself.\n\n\n\n\n\n\nTipA university computer?\n\n\n\nIf you cannot install software on your computer, ask your instructor about Posit Cloud, which runs RStudio in a web browser.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#get-the-starter-project",
+    "href": "survey/n3-rstudio.html#get-the-starter-project",
+    "title": "N3 · Moving to RStudio",
+    "section": "3. Get the starter project",
+    "text": "3. Get the starter project\nAn RStudio project is a folder that holds everything for one piece of work, plus a small .Rproj file. Opening the .Rproj file opens RStudio inside that folder, so file paths like data/nhis2025_adult.csv just work.\n\nDownload nhis-project.zip (about 1.3 MB).\nUnzip it and move the nhis-project folder somewhere permanent, such as your Documents folder.\n\nOn Windows, right-click the zip file and choose Extract All. Do not work inside the zip file itself; it only looks like a folder.\nOn a Mac, double-click the zip file.\n\nDouble-click nhis-project.Rproj to open the project in RStudio.\n\nThe folder contains:\n\n\n\nFile\nWhat it is\n\n\n\n\nnhis-project.Rproj\nOpens the project\n\n\ndata/nhis2025_adult.csv\nThe NHIS teaching file from N1 and N2\n\n\nprepare.R\nThe N2 code, as a script\n\n\nn3.R … n7.R\nEmpty scripts, one for each lesson",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#a-tour-of-rstudio",
+    "href": "survey/n3-rstudio.html#a-tour-of-rstudio",
+    "title": "N3 · Moving to RStudio",
+    "section": "4. A tour of RStudio",
+    "text": "4. A tour of RStudio\nRStudio has four panes:\n\n\n\n\n\n\n\n\nPane\nWhere\nWhat it is for\n\n\n\n\nSource\ntop left\nScripts: code you write and save. Open n3.R to see it.\n\n\nConsole\nbottom left\nWhere code actually runs, and where results appear\n\n\nEnvironment\ntop right\nThe objects you have created, such as dataframes\n\n\nFiles\nbottom right\nThe files in your project folder\n\n\n\nA script is just a text file of R code. Unlike a Colab notebook, the results are not saved in the file; they appear in the Console when you run the code.\nTwo ways to run code from a script:\n\nRun the current line (or selected lines): Ctrl + Enter on Windows, Cmd + Enter on a Mac.\nRun the whole script from top to bottom: the Source button at the top of the script, or Ctrl + Shift + S / Cmd + Shift + S.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#install-the-packages",
+    "href": "survey/n3-rstudio.html#install-the-packages",
+    "title": "N3 · Moving to RStudio",
+    "section": "5. Install the packages",
+    "text": "5. Install the packages\nPackages are installed once per computer, then loaded with library() in every script. Type this into the Console (not a script, since you never need to run it again) and press Enter:\n\ninstall.packages(c(\"tidyverse\", \"survey\", \"srvyr\"))\n\nThis can take several minutes. When it finishes, check that each one loads:\n\nlibrary(tidyverse)\nlibrary(survey)\nlibrary(srvyr)\n\nMessages are normal; an error that says there is no package called ... means the installation did not finish. These lessons were tested with tidyverse 2.0.0, survey 4.5, and srvyr 1.3.1. You can check yours with packageVersion(\"srvyr\").\n\nsurvey is the standard R package for analyzing complex survey data.\nsrvyr lets you use survey methods with the same %&gt;%, filter(), group_by(), and summarize() you already know. You will use it from N4 on.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#run-the-preparation-script",
+    "href": "survey/n3-rstudio.html#run-the-preparation-script",
+    "title": "N3 · Moving to RStudio",
+    "section": "6. Run the preparation script",
+    "text": "6. Run the preparation script\nOpen prepare.R from the Files pane. It is the code you wrote in N2, as one script. Read through it: every step should look familiar. Then click Source to run it all.\nIt reads the teaching file, builds the analysis variables, and saves the result as data/nhis_analysis.rds.\n\n\n\n\n\n\nNoteWhy .rds and not .csv?\n\n\n\nA CSV file holds only text and numbers. An .rds file saves an R object exactly as it is, including details such as the order of the categories you set with factor() in N2. Use saveRDS() to save and readRDS() to read.\n\n\nanalysis now appears in the Environment pane: 24,215 observations of 12 variables.\n\n\n\n\n\n\nNoteYour turn 1\n\n\n\nIn the Console, check the analysis file with dim(analysis) and count(analysis, survivor).\nExpected result: 24,215 rows and 12 columns; 2,833 survivors, 21,349 non-survivors, 33 NA.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ndim(analysis)\n\n[1] 24215    12\n\ncount(analysis, survivor)\n\n# A tibble: 3 × 2\n  survivor     n\n     &lt;dbl&gt; &lt;int&gt;\n1        0 21349\n2        1  2833\n3       NA    33",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#your-first-script",
+    "href": "survey/n3-rstudio.html#your-first-script",
+    "title": "N3 · Moving to RStudio",
+    "section": "7. Your first script",
+    "text": "7. Your first script\nNow write code in n3.R, where it is saved. A script should be able to run on its own from a fresh start, so it begins by loading its packages and its data.\n\n\n\n\n\n\nNoteYour turn 2\n\n\n\nIn n3.R, write a script that:\n\nloads the tidyverse,\nreads data/nhis_analysis.rds with readRDS(),\ncalculates, for survivors only, the percent in fair or poor health in each poverty group, as you did for education in N2.\n\nSave the script (Ctrl + S / Cmd + S), then run it with Source.\nExpected result: Below 100% 57.8%; 100-199% 40.8%; 200-399% 27.5%; 400% or more 15.7%.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nlibrary(tidyverse)\n\nanalysis &lt;- readRDS(\"data/nhis_analysis.rds\")\n\n\nanalysis %&gt;%\n  filter(survivor == 1, !is.na(fair_poor)) %&gt;%\n  group_by(poverty) %&gt;%\n  summarize(people = n(), pct_fair_poor = 100 * mean(fair_poor))\n\n# A tibble: 4 × 3\n  poverty      people pct_fair_poor\n  &lt;fct&gt;         &lt;int&gt;         &lt;dbl&gt;\n1 Below 100%      206          57.8\n2 100-199%        495          40.8\n3 200-399%        891          27.5\n4 400% or more   1239          15.7",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#the-fresh-start-test",
+    "href": "survey/n3-rstudio.html#the-fresh-start-test",
+    "title": "N3 · Moving to RStudio",
+    "section": "8. The fresh-start test",
+    "text": "8. The fresh-start test\nA script that works only because of something you typed earlier in the Console will fail for anyone else, including you next week. Test it the way a stranger would run it:\n\nSession &gt; Restart R. This clears everything from memory; the Environment pane empties.\nRun n3.R with Source.\n\nIf it still gives the same result, the script is complete. If you get an error such as object 'analysis' not found, something the script needs is missing from it.\n\n\n\n\n\n\nNoteYour turn 3\n\n\n\nDo the fresh-start test on n3.R.\nExpected result: the same four percentages as before, with no errors.\n\n\n\n\n\n\n\n\nTipSolution\n\n\n\n\n\nIf it failed, the most likely cause is a missing library(tidyverse) or readRDS() line at the top of the script. Every lesson script from now on starts with those two lines (plus library(srvyr) from N4).",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#recap",
+    "href": "survey/n3-rstudio.html#recap",
+    "title": "N3 · Moving to RStudio",
+    "section": "Recap",
+    "text": "Recap\n\n\n\n\n\n\n\nStep\nHow\n\n\n\n\nOpen the project\nDouble-click nhis-project.Rproj\n\n\nInstall a package (once per computer)\ninstall.packages(\"name\") in the Console\n\n\nLoad a package (every script)\nlibrary(name) at the top of the script\n\n\nRun a line / the whole script\nCtrl/Cmd + Enter / Source\n\n\nSave and read an R object\nsaveRDS(x, \"file.rds\"), readRDS(\"file.rds\")\n\n\nCheck a script is complete\nSession &gt; Restart R, then Source",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "survey/n3-rstudio.html#next",
+    "href": "survey/n3-rstudio.html#next",
+    "title": "N3 · Moving to RStudio",
+    "section": "Next",
+    "text": "Next\nN4: Why Weights Matter is coming soon. It uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.",
+    "crumbs": [
+      "R for Survey Data",
+      "Lessons (RStudio)",
+      "N3: Moving to RStudio"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Tutorials",
+    "section": "",
+    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
+  },
+  {
+    "objectID": "index.html#how-the-tutorials-work",
+    "href": "index.html#how-the-tutorials-work",
+    "title": "Tutorials",
+    "section": "How the tutorials work",
+    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
+  },
+  {
+    "objectID": "aou/index.html",
+    "href": "aou/index.html",
+    "title": "R for All of Us",
+    "section": "",
+    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
+    "crumbs": [
+      "R for All of Us",
       "Overview"
     ]
   },
   {
-    "objectID": "survey/index.html#lessons",
-    "href": "survey/index.html#lessons",
-    "title": "R for Survey Data",
-    "section": "Lessons",
-    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nPlanned\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nPlanned\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nPlanned\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nPlanned\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
+    "objectID": "aou/index.html#path-a-write-it-yourself",
+    "href": "aou/index.html#path-a-write-it-yourself",
+    "title": "R for All of Us",
+    "section": "Path A: Write It Yourself",
+    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
     "crumbs": [
-      "R for Survey Data",
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-b-ai-assisted",
+    "href": "aou/index.html#path-b-ai-assisted",
+    "title": "R for All of Us",
+    "section": "Path B: AI-Assisted",
+    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
+    "crumbs": [
+      "R for All of Us",
       "Overview"
     ]
   },
@@ -66,50 +223,25 @@
     ]
   },
   {
-    "objectID": "aou/index.html",
-    "href": "aou/index.html",
-    "title": "R for All of Us",
+    "objectID": "survey/index.html",
+    "href": "survey/index.html",
+    "title": "R for Survey Data",
     "section": "",
-    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
+    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
     "crumbs": [
-      "R for All of Us",
+      "R for Survey Data",
       "Overview"
     ]
   },
   {
-    "objectID": "aou/index.html#path-a-write-it-yourself",
-    "href": "aou/index.html#path-a-write-it-yourself",
-    "title": "R for All of Us",
-    "section": "Path A: Write It Yourself",
-    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
+    "objectID": "survey/index.html#lessons",
+    "href": "survey/index.html#lessons",
+    "title": "R for Survey Data",
+    "section": "Lessons",
+    "text": "Lessons\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nReady\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nReady\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nReady\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nPlanned\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nPlanned\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nPlanned\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
     "crumbs": [
-      "R for All of Us",
+      "R for Survey Data",
       "Overview"
     ]
-  },
-  {
-    "objectID": "aou/index.html#path-b-ai-assisted",
-    "href": "aou/index.html#path-b-ai-assisted",
-    "title": "R for All of Us",
-    "section": "Path B: AI-Assisted",
-    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
-    "crumbs": [
-      "R for All of Us",
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Tutorials",
-    "section": "",
-    "text": "Hands-on tutorials to introduce basic programming skills to conduct computational health research. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
-  },
-  {
-    "objectID": "index.html#how-the-tutorials-work",
-    "href": "index.html#how-the-tutorials-work",
-    "title": "Tutorials",
-    "section": "How the tutorials work",
-    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
   }
 ]
