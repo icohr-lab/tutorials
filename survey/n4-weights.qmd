@@ -248,4 +248,4 @@ nhis_design %>%
 
 ## Next
 
-**N5: Weighted Estimates** is coming soon: estimates for subgroups, why you filter the design and never the data, comparing socioeconomic groups, and plotting estimates with confidence intervals.
+Continue with [N5: Weighted Estimates](n5-estimates.qmd): estimates for subgroups, why you filter the design and never the data, comparing socioeconomic groups, and plotting estimates with confidence intervals.

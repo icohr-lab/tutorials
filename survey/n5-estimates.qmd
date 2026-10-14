@@ -1,0 +1,247 @@
+---
+title: "N5 · Weighted Estimates"
+subtitle: "R for Survey Data, lesson 5 of 7 · about 40 minutes"
+---
+
+```{r}
+#| include: false
+# Build `analysis` exactly as the starter project's prepare.R does, with paths for this website
+prep <- readLines("starter/nhis-project/prepare.R")
+prep <- sub("data/nhis2025_adult.csv", "../data/nhis/nhis2025_adult.csv", prep, fixed = TRUE)
+prep <- prep[!grepl("^saveRDS", prep)]
+suppressMessages(eval(parse(text = prep)))
+options(pillar.sigfig = 4)
+```
+
+**In this lesson you will learn to:**
+
+- Estimate for a subgroup without breaking the survey design
+- Compare socioeconomic groups among cancer survivors
+- Recognize an estimate that is too uncertain to rely on
+- Plot estimates with their confidence intervals
+
+**Before this lesson:** [N4: Why Weights Matter](n4-weights.qmd). Work in `n5.R` in your starter project.
+
+## 1. Setup
+
+```{r}
+#| message: false
+library(tidyverse)
+library(srvyr)
+```
+
+```{r}
+#| eval: false
+analysis <- readRDS("data/nhis_analysis.rds")
+```
+
+```{r}
+nhis_design <- analysis %>%
+  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)
+```
+
+## 2. Subgroups: filter the design, not the data
+
+The research question is about cancer survivors, a subgroup. There are two ways you might try to focus on them.
+
+**The right way:** build the design from the **full** file, then `filter()` the design.
+
+```{r}
+nhis_design %>%
+  filter(survivor == 1, poverty == "Below 100%") %>%
+  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = "ci"))
+```
+
+**The wrong way:** `filter()` the data first, then build the design from what is left.
+
+```{r}
+#| error: true
+analysis %>%
+  filter(survivor == 1, poverty == "Below 100%") %>%
+  as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE) %>%
+  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = "ci"))
+```
+
+An error. To measure uncertainty, the survey package compares the PSUs **within each stratum**, so every stratum needs at least two. After cutting the data down to about 200 people, some strata have only one PSU left, and the calculation is impossible.
+
+Filtering the design instead keeps the full structure of the survey: everyone outside the subgroup stays in the design and simply counts as zero. This is called **domain** (or subpopulation) estimation, and it is what NCHS recommends in its [survey description](https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Dataset_Documentation/NHIS/2025/srvydesc-508.pdf): analyze subgroups using the full data file.
+
+::: {.callout-warning}
+## Why not just cut the data when it happens to run?
+For large subgroups, cutting the data first sometimes runs and gives almost the same answer. But it fails as soon as a subgroup gets small, and searching the error message online leads to settings that silence it without fixing the problem. In other surveys, it can even give a wrong confidence interval with no error at all. Build the design once from the full file, and filter the design. Always.
+:::
+
+This is also why lesson N2 kept every adult in the analysis file.
+
+## 3. The income gradient among survivors
+
+Now the core of the project. For survivors, estimate the percent in fair or poor health in each income group. Two additions to what you know:
+
+- `filter(!is.na(fair_poor))` on the design leaves out the 2 survivors without an answer, so the counts describe exactly the people in each estimate.
+- `unweighted(n())` counts the **people in the sample** behind each estimate. Always report it next to weighted estimates.
+
+```{r}
+by_poverty <- nhis_design %>%
+  filter(survivor == 1, !is.na(fair_poor)) %>%
+  group_by(poverty) %>%
+  summarize(
+    n = unweighted(n()),
+    fair_poor = survey_mean(fair_poor, vartype = "ci")
+  ) %>%
+  mutate(across(starts_with("fair_poor"), ~ 100 * .x))
+
+by_poverty
+```
+
+A steep gradient: among survivors living below the poverty line, more than half report fair or poor health; among those with family income at least four times the poverty line, about one in six do. The confidence intervals of the lowest and highest groups are far apart, so this is not just sampling noise.
+
+::: {.callout-note}
+## Your turn 1
+Do the same for education among survivors. Remember to leave out missing education.
+
+*Expected result: High school or less 40.2% (95% CI 36.1 to 44.2); Some college 28.6% (24.9 to 32.3); Bachelor or higher 14.7% (12.4 to 17.0).*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+nhis_design %>%
+  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %>%
+  group_by(education) %>%
+  summarize(
+    n = unweighted(n()),
+    fair_poor = survey_mean(fair_poor, vartype = "ci")
+  ) %>%
+  mutate(across(starts_with("fair_poor"), ~ 100 * .x))
+```
+:::
+
+## 4. When an estimate is too uncertain
+
+::: {.callout-note}
+## Your turn 2
+Now estimate fair or poor health among survivors with and without health insurance. Look closely at `n` and at the confidence intervals. What do you notice?
+
+*Expected result: insured 27.4% (95% CI 25.3 to 29.5), based on 2,783 people; uninsured 29.0%, based on only 44 people, with a confidence interval from about 12% to 46%.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+nhis_design %>%
+  filter(survivor == 1, !is.na(fair_poor), !is.na(insured)) %>%
+  group_by(insured) %>%
+  summarize(
+    n = unweighted(n()),
+    fair_poor = survey_mean(fair_poor, vartype = "ci")
+  ) %>%
+  mutate(across(starts_with("fair_poor"), ~ 100 * .x))
+```
+
+Most survivors are 65 or older and covered by Medicare, so only 44 uninsured survivors (with an answer about their health) were interviewed. The estimate for them, 29%, is compatible with anything from about 12% to 46%: it says almost nothing. Do not report a number like this as a finding. Lesson N7 covers NCHS's rules for when an estimate is too unreliable to publish.
+:::
+
+The habit to take away: **always look at `n` and the width of the confidence interval before you look at the estimate.**
+
+## 5. Survivors compared with everyone else
+
+Is poor health among low-income survivors just about income? Compare survivors and non-survivors at each income level by grouping by both.
+
+```{r}
+by_both <- nhis_design %>%
+  filter(!is.na(survivor), !is.na(fair_poor)) %>%
+  group_by(survivor, poverty) %>%
+  summarize(
+    n = unweighted(n()),
+    fair_poor = survey_mean(fair_poor, vartype = "ci")
+  ) %>%
+  mutate(across(starts_with("fair_poor"), ~ 100 * .x))
+
+by_both
+```
+
+At every income level, survivors are roughly twice as likely as other adults to report fair or poor health. And the income gradient appears in both groups. A table this size is hard to take in; a plot is better.
+
+## 6. Plotting estimates with confidence intervals
+
+`geom_pointrange()` draws each estimate as a point with a line for its confidence interval. It needs `y` for the estimate and `ymin` and `ymax` for the limits. `expand_limits(y = 0)` makes the axis start at zero, so differences are not visually exaggerated.
+
+```{r}
+#| fig-width: 6
+#| fig-height: 3.5
+ggplot(by_poverty, aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +
+  geom_pointrange() +
+  expand_limits(y = 0) +
+  labs(
+    x = "Family income (percent of poverty line)",
+    y = "Fair or poor health (%)",
+    title = "Cancer survivors, NHIS 2025"
+  ) +
+  theme_minimal()
+```
+
+To show two groups side by side, map one of them to `color` and nudge the points apart with `position_dodge()`. `factor()` turns the 0/1 `survivor` column into labels for the legend.
+
+```{r}
+#| fig-width: 7
+#| fig-height: 3.5
+by_both %>%
+  mutate(group = factor(survivor, levels = c(1, 0), labels = c("Cancer survivors", "Other adults"))) %>%
+  ggplot(aes(x = poverty, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp, color = group)) +
+  geom_pointrange(position = position_dodge(width = 0.4)) +
+  expand_limits(y = 0) +
+  labs(
+    x = "Family income (percent of poverty line)",
+    y = "Fair or poor health (%)",
+    color = NULL,
+    title = "Fair or poor health by income, NHIS 2025"
+  ) +
+  theme_minimal()
+```
+
+::: {.callout-note}
+## Your turn 3
+Make the first kind of plot for education among survivors: one point and interval for each education group.
+
+*Expected result: three points falling from about 40% to about 15%, with intervals that do not overlap between the lowest and highest groups.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+#| fig-width: 6
+#| fig-height: 3.5
+by_education <- nhis_design %>%
+  filter(survivor == 1, !is.na(fair_poor), !is.na(education)) %>%
+  group_by(education) %>%
+  summarize(fair_poor = survey_mean(fair_poor, vartype = "ci")) %>%
+  mutate(across(starts_with("fair_poor"), ~ 100 * .x))
+
+ggplot(by_education, aes(x = education, y = fair_poor, ymin = fair_poor_low, ymax = fair_poor_upp)) +
+  geom_pointrange() +
+  expand_limits(y = 0) +
+  labs(x = NULL, y = "Fair or poor health (%)", title = "Cancer survivors, NHIS 2025") +
+  theme_minimal()
+```
+:::
+
+## 7. What the estimates do and do not show
+
+These are **descriptive** estimates: they describe how fair or poor health is distributed among U.S. adult cancer survivors. They do not explain *why*. Income and education are related to each other, to age, and to the kinds of cancer people have had. Separating these influences takes a regression model, which is lesson N6.
+
+## Recap
+
+| Code | What it does |
+|---|---|
+| `nhis_design %>% filter(...)` | Estimate for a subgroup, keeping the full design |
+| `unweighted(n())` | Number of people in the sample behind an estimate |
+| `group_by(a, b)` on the design | Estimates for every combination of two variables |
+| `geom_pointrange(aes(y, ymin, ymax))` | Plot estimates with their confidence intervals |
+| `position_dodge(width = 0.4)` | Place groups side by side |
+| `expand_limits(y = 0)` | Start the axis at zero |
+
+**The rules:** build the design from the full file and filter the design; report `n` with every estimate; check the confidence interval before trusting the estimate.
+
+## Next
+
+**N6: Tests and Regression** is coming soon: testing whether differences are larger than chance, and estimating the income gradient while accounting for age, sex, and education.
