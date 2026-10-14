@@ -201,4 +201,4 @@ If it failed, the most likely cause is a missing `library(tidyverse)` or `readRD
 
 ## Next
 
-**N4: Why Weights Matter** is coming soon. It uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.
+Continue with [N4: Why Weights Matter](n4-weights.qmd), which uses the survey weights to turn the percentages above into estimates for all U.S. adults who have had cancer.

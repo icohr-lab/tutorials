@@ -92,6 +92,8 @@ website:
           contents:
             - text: "N3: Moving to RStudio"
               href: survey/n3-rstudio.qmd
+            - text: "N4: Why Weights Matter"
+              href: survey/n4-weights.qmd
 
 execute:
   freeze: auto   # re-run a page's R code only when that page changes

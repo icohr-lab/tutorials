@@ -1,0 +1,251 @@
+---
+title: "N4 · Why Weights Matter"
+subtitle: "R for Survey Data, lesson 4 of 7 · about 40 minutes"
+---
+
+```{r}
+#| include: false
+# Build `analysis` exactly as the starter project's prepare.R does, with paths for this website
+prep <- readLines("starter/nhis-project/prepare.R")
+prep <- sub("data/nhis2025_adult.csv", "../data/nhis/nhis2025_adult.csv", prep, fixed = TRUE)
+prep <- prep[!grepl("^saveRDS", prep)]
+suppressMessages(eval(parse(text = prep)))
+options(pillar.sigfig = 4)
+```
+
+**In this lesson you will learn to:**
+
+- Explain what a survey weight is
+- Compare unweighted and weighted estimates
+- Set up the survey design with `srvyr`
+- Estimate a percentage with a 95% confidence interval that accounts for the design
+
+**Before this lesson:** [N3: Moving to RStudio](n3-rstudio.qmd). Work in `n4.R` in your starter project.
+
+## 1. Setup
+
+Start `n4.R` with these lines. Every lesson script from now on starts the same way.
+
+```{r}
+#| eval: false
+library(tidyverse)
+library(srvyr)
+
+analysis <- readRDS("data/nhis_analysis.rds")
+```
+
+```{r}
+#| include: false
+library(srvyr)
+```
+
+If `readRDS()` says the file does not exist, run `prepare.R` first (N3, section 6).
+
+## 2. What a weight is
+
+Each adult in the file has a weight, `WTFA_A`: the number of U.S. adults that person stands for.
+
+```{r}
+summary(analysis$WTFA_A)
+```
+
+The median person stands for about 9,000 adults, but weights range from about 2,400 to 45,000. Someone with a weight of 45,000 belongs to a group that was hard to reach or less likely to respond, so each person interviewed from that group has to stand for many more people. Someone with a small weight belongs to a group that was easy to reach.
+
+::: {.callout-note}
+## Your turn 1
+Add up all the weights with `sum()`. What does the total represent?
+
+*Expected result: 264,821,349, about 265 million: the number of U.S. adults the survey represents (adults living in households, not in institutions such as nursing homes or prisons).*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+sum(analysis$WTFA_A)
+```
+:::
+
+## 3. Unweighted versus weighted
+
+How many U.S. adults are 65 or older? Here is the share of the **sample**, and the share once each person counts as many people as their weight says. `weighted.mean()` does that.
+
+```{r}
+analysis %>%
+  filter(!is.na(age_group)) %>%
+  summarize(
+    unweighted = 100 * mean(age_group == "65+"),
+    weighted   = 100 * weighted.mean(age_group == "65+", WTFA_A)
+  )
+```
+
+More than a third of the people interviewed are 65 or older, but they make up less than a quarter of U.S. adults. Older adults are more likely to live alone or with just one other adult (and only one adult per household is interviewed), and they are more likely to take part, so the sample has too many of them. Each of them gets a smaller weight to make up for it.
+
+This matters for the project because cancer is much more common at older ages. Any unweighted estimate about survivors leans toward older people.
+
+::: {.callout-note}
+## Your turn 2
+What percent of U.S. adults are cancer survivors? Calculate it unweighted and weighted, leaving out people with missing `survivor`.
+
+*Expected result: 11.7% unweighted, 8.7% weighted.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+analysis %>%
+  filter(!is.na(survivor)) %>%
+  summarize(
+    unweighted = 100 * mean(survivor),
+    weighted   = 100 * weighted.mean(survivor, WTFA_A)
+  )
+```
+:::
+
+## 4. Why weights are not enough
+
+`weighted.mean()` gives the right **estimate**. It cannot tell you how **certain** that estimate is, and every estimate from a sample needs a measure of uncertainty, usually a 95% confidence interval.
+
+Uncertainty depends on how the sample was drawn, and the NHIS was not drawn one person at a time:
+
+- **Clusters (sampling units).** The NHIS first picks geographic areas, then households within them. People in the same area tend to be alike, so 30 people from one area tell you less than 30 people from 30 different areas. The column `PPSU` records each person's **primary sampling unit** (PSU).
+- **Strata.** The country is first divided into groups of areas called **strata**, and areas are picked within each one. This makes estimates more precise. The column `PSTRAT` records the stratum.
+
+Software that ignores clusters treats everyone as independent, and its confidence intervals come out **too narrow**: they claim more certainty than the data support.
+
+## 5. The survey design object
+
+The `srvyr` package stores the data together with the design in one object. Everything after this works on that object instead of on `analysis`.
+
+```{r}
+nhis_design <- analysis %>%
+  as_survey_design(
+    ids = PPSU,          # primary sampling units (clusters)
+    strata = PSTRAT,     # strata
+    weights = WTFA_A,    # weights
+    nest = TRUE          # PSU numbers restart within each stratum
+  )
+
+nhis_design
+```
+
+Each argument names a column from the file. These four lines come straight from NCHS's own instructions for analyzing the NHIS in R, in the [2025 survey description](https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Dataset_Documentation/NHIS/2025/srvydesc-508.pdf).
+
+::: {.callout-note}
+## Why `nest = TRUE`?
+PSU numbers are only unique *within* a stratum: two different areas in two different strata can share a number.
+
+```{r}
+n_distinct(analysis$PPSU)                     # PSU numbers
+nrow(distinct(analysis, PSTRAT, PPSU))        # actual PSUs
+```
+
+`nest = TRUE` tells R to identify a PSU by its stratum *and* its number. Without it, R would merge areas that are really separate.
+:::
+
+## 6. Estimates with confidence intervals
+
+Use `summarize()` on the design object, with `survey_mean()` in place of `mean()`. `vartype = "ci"` asks for a 95% confidence interval, and `na.rm = TRUE` leaves out missing values.
+
+```{r}
+nhis_design %>%
+  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = "ci"))
+```
+
+`survey_mean()` gives a proportion. About **14.7%** of U.S. adults report fair or poor health, and the 95% confidence interval runs from 14.1% to 15.3%. (The unweighted figure would have been 15.8%.)
+
+`group_by()` works on the design just as it does on a dataframe.
+
+::: {.callout-note}
+## Your turn 3
+Estimate the percent in fair or poor health for survivors and non-survivors, with 95% confidence intervals. Start from `nhis_design`, remove missing `survivor` with `filter()`, then use `group_by()` and `survey_mean()`. Multiply by 100 with `mutate()` if you like.
+
+*Expected result: survivors 27.4% (95% CI 25.3% to 29.5%); non-survivors 13.5% (12.9% to 14.1%).*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+nhis_design %>%
+  filter(!is.na(survivor)) %>%
+  group_by(survivor) %>%
+  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = "ci")) %>%
+  mutate(across(starts_with("fair_poor"), ~ 100 * .x))
+```
+
+`across(starts_with("fair_poor"), ~ 100 * .x)` multiplies every column whose name starts with `fair_poor` (the estimate and both limits) by 100.
+:::
+
+Among survivors, the weighted estimate (27.4%) is close to the unweighted one from N2 (26.9%). Weighting does not always change an estimate much, as here, but sometimes it does, as with age. You only know by doing it.
+
+## 7. Seeing what the design does
+
+Here is the same estimate, fair or poor health among survivors, calculated three ways.
+
+```{r}
+# 1. Ignoring the design: a simple confidence interval for a proportion
+surv <- analysis %>% filter(survivor == 1, !is.na(fair_poor))
+p <- mean(surv$fair_poor)
+se <- sqrt(p * (1 - p) / nrow(surv))
+c(estimate = p, low = p - 1.96 * se, high = p + 1.96 * se) * 100
+
+# 2. Weights only
+analysis %>%
+  as_survey_design(weights = WTFA_A) %>%
+  filter(survivor == 1) %>%
+  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = "ci") * 100)
+
+# 3. The full design
+nhis_design %>%
+  filter(survivor == 1) %>%
+  summarize(fair_poor = survey_mean(fair_poor, na.rm = TRUE, vartype = "ci") * 100)
+```
+
+| Method | Estimate | 95% CI | Width |
+|---|---|---|---|
+| Ignoring the design | 26.9% | 25.2 to 28.5 | 3.3 |
+| Weights only | 27.4% | 25.5 to 29.4 | 3.9 |
+| Full design | 27.4% | 25.3 to 29.5 | 4.2 |
+
+- **The weights fix the estimate** (26.9% becomes 27.4%).
+- **The strata and PSUs fix the uncertainty**: the honest interval is about a quarter wider than the naive one.
+
+The difference here is modest. For smaller groups and for variables that cluster strongly by place, such as income, it can be much larger. Since you cannot know in advance, always use the full design.
+
+## 8. From percentages to people
+
+Weights also turn counts of people in the sample into counts of people in the country. `survey_total()` adds up the weights.
+
+::: {.callout-note}
+## Your turn 4
+How many U.S. adults are cancer survivors? Use `group_by(survivor)` and `survey_total(vartype = "ci")` on `nhis_design`. Dividing by `1e6` (one million) makes the numbers easier to read.
+
+*Expected result: about 23.0 million survivors (95% CI 21.8 to 24.2 million). The other rows are non-survivors and people with missing `survivor`.*
+:::
+
+::: {.callout-tip collapse="true"}
+## Solution
+```{r}
+nhis_design %>%
+  group_by(survivor) %>%
+  summarize(adults = survey_total(vartype = "ci")) %>%
+  mutate(across(starts_with("adults"), ~ .x / 1e6))   # in millions
+```
+
+2,833 people in the sample stand for about 23 million U.S. adults. (Remember the definition from N2: non-melanoma skin cancer alone does not count.)
+:::
+
+## Recap
+
+| Code | What it does |
+|---|---|
+| `weighted.mean(x, w)` | Weighted mean or proportion, without uncertainty |
+| `as_survey_design(ids = PPSU, strata = PSTRAT, weights = WTFA_A, nest = TRUE)` | The NHIS design object |
+| `survey_mean(x, na.rm = TRUE, vartype = "ci")` | Weighted mean or proportion with a 95% CI |
+| `survey_total(vartype = "ci")` | Estimated number of people, with a 95% CI |
+| `group_by()` on the design | Estimates for each group |
+
+**The rule:** weights for the estimate; strata and PSUs for the uncertainty; always all three.
+
+## Next
+
+**N5: Weighted Estimates** is coming soon: estimates for subgroups, why you filter the design and never the data, comparing socioeconomic groups, and plotting estimates with confidence intervals.
