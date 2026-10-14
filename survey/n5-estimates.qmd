@@ -244,4 +244,4 @@ These are **descriptive** estimates: they describe how fair or poor health is di
 
 ## Next
 
-**N6: Tests and Regression** is coming soon: testing whether differences are larger than chance, and estimating the income gradient while accounting for age, sex, and education.
+Continue with [N6: Tests and Regression](n6-regression.qmd): testing whether differences are larger than chance, and estimating the income gradient while accounting for age, sex, and education.
