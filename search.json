@@ -1,0 +1,115 @@
+[
+  {
+    "objectID": "survey/index.html",
+    "href": "survey/index.html",
+    "title": "R for Survey Data",
+    "section": "",
+    "text": "National surveys like the NHIS do not sample people at random from the whole population. To describe the population correctly, every analysis must account for the survey’s weights and design. These lessons teach that, using the 2025 NHIS Sample Adult file.\nRunning example: among adults who have had cancer, how does self-rated health differ by socioeconomic position?",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "survey/index.html#lessons",
+    "href": "survey/index.html#lessons",
+    "title": "R for Survey Data",
+    "section": "Lessons",
+    "text": "Lessons\n\n\n\n\n\n\n\n\n\nLesson\nWhere\nCovers\nStatus\n\n\n\n\nN1: Meet the NHIS\nColab\nCodebooks, loading the data, refused/don’t-know codes\nPlanned\n\n\nN2: Preparing Variables\nColab\nRecoding to NA, analysis variables, checking against the codebook\nPlanned\n\n\nN3: Moving to RStudio\nRStudio\nInstalling R and RStudio, projects, scripts\nPlanned\n\n\nN4: Why Weights Matter\nRStudio\nWeighted vs. unweighted estimates, the survey design object\nPlanned\n\n\nN5: Weighted Estimates\nRStudio\nPercentages with confidence intervals, subgroups, plots\nPlanned\n\n\nN6: Tests and Regression\nRStudio\nDesign-based chi-square, svyglm(), odds ratios\nPlanned\n\n\nN7: Your Own Project\nRStudio\nProject structure, reliability standards, writing methods\nPlanned\n\n\n\nComplete R Foundations first.",
+    "crumbs": [
+      "R for Survey Data",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html",
+    "href": "foundations/index.html",
+    "title": "R Foundations",
+    "section": "",
+    "text": "A self-paced introduction to R for students with no programming experience. Each notebook opens in Google Colab with R already selected and takes about 20 to 40 minutes.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#how-to-use-the-notebooks",
+    "href": "foundations/index.html#how-to-use-the-notebooks",
+    "title": "R Foundations",
+    "section": "How to use the notebooks",
+    "text": "How to use the notebooks\n\nClick a notebook link below.\nSign in with a Google account.\nChoose File &gt; Save a copy in Drive and work in your copy. If you skip this step, your work is lost when you close the tab.\nRun the cells in order from top to bottom. Each notebook ends with solutions and a link to the next one.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#notebooks",
+    "href": "foundations/index.html#notebooks",
+    "title": "R Foundations",
+    "section": "Notebooks",
+    "text": "Notebooks\n\n\n\nNotebook\nCovers\n\n\n\n\nF1: First Steps in R\nRunning code, arithmetic, variables, functions, reading error messages\n\n\nF2: Vectors and Data Types\nVectors, numbers vs. text, TRUE/FALSE, dates, missing values\n\n\nF3: Dataframes\nBuilding and inspecting a table; one row per person or many\n\n\nF4: Choosing Rows and Columns\nPackages, select(), filter(), the pipe\n\n\nF5: New Columns and Data Files\nmutate(), if_else(), reading a CSV file, exploring a new dataset\n\n\nF6: Combining Tables\nInner and left joins, missing values from joins, duplicated rows",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "foundations/index.html#where-next",
+    "href": "foundations/index.html#where-next",
+    "title": "R Foundations",
+    "section": "Where next",
+    "text": "Where next\n\nWorking with All of Us data? Continue with R for All of Us.\nWorking with national survey data? Continue with R for Survey Data.",
+    "crumbs": [
+      "R Foundations",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html",
+    "href": "aou/index.html",
+    "title": "R for All of Us",
+    "section": "",
+    "text": "These notebooks continue from R Foundations using simulated data laid out like All of Us Research Program data. The running example asks whether anticholinergic drug exposure is associated with dementia or mild cognitive impairment. Choose one of two paths.",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-a-write-it-yourself",
+    "href": "aou/index.html#path-a-write-it-yourself",
+    "title": "R for All of Us",
+    "section": "Path A: Write It Yourself",
+    "text": "Path A: Write It Yourself\n\n\n\nNotebook\nCovers\n\n\n\n\nA1: Cleaning Real Data\nRecoding categories with if_else() and case_when()\n\n\nA2: One Row per Person\nEarliest record per person, merging three tables, long to wide\n\n\nA3: Dates and New Variables\nDate logic, exposure before diagnosis, analysis variables, saving\n\n\nA4: Exploring and Plotting\nGroup summaries, histogram, box plot, scatter plot\n\n\nA5: Statistical Tests\nt-test, ANOVA, chi-square, Fisher’s exact test\n\n\nA6: Regression\nLinear and logistic regression, odds ratios",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "aou/index.html#path-b-ai-assisted",
+    "href": "aou/index.html#path-b-ai-assisted",
+    "title": "R for All of Us",
+    "section": "Path B: AI-Assisted",
+    "text": "Path B: AI-Assisted\n\n\n\nNotebook\nCovers\n\n\n\n\nB1: Your First Prompts\nThe describe-generate-read-run-check loop; what may be shared with an AI tool\n\n\nB2: Building a Dataset with AI\nPrompting for one row per person, merging, date logic; test cases\n\n\nB3: Exploring and Plotting with AI\nSummaries and plots by prompt; checking a plot against numbers\n\n\nB4: Catching Mistakes\nDebugging errors with AI; four mistakes that run without an error\n\n\nB5: Statistics with AI\nChoosing the test, reading output, odds ratios, moving to the Workbench",
+    "crumbs": [
+      "R for All of Us",
+      "Overview"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Tutorials",
+    "section": "",
+    "text": "Hands-on tutorials for students in the ICoHR lab and University of Idaho courses. No programming experience is needed: everyone starts with R Foundations, then continues with the tutorial that matches their project."
+  },
+  {
+    "objectID": "index.html#how-the-tutorials-work",
+    "href": "index.html#how-the-tutorials-work",
+    "title": "Tutorials",
+    "section": "How the tutorials work",
+    "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
+  }
+]
