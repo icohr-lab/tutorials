@@ -374,6 +374,13 @@
     "text": "How the tutorials work\n\nStart in your browser. Early lessons are Google Colab notebooks: click a link, sign in with a Google account, and run code with nothing to install.\nMove to RStudio for projects. Later lessons are run in RStudio on your own computer, where your files and packages stay put.\nLearn by doing. Every lesson has exercises with expected results, and solutions at the end."
   },
   {
+    "objectID": "contact.html",
+    "href": "contact.html",
+    "title": "Contact",
+    "section": "",
+    "text": "For any questions or comments on these tutorials, contact:\nYesol Sapozhnikov\nClinical Assistant Professor\nDepartment of Nursing\nSchool of Health and Medical Professions\nUniversity of Idaho\nEmail: yesols@uidaho.edu"
+  },
+  {
     "objectID": "aou/index.html",
     "href": "aou/index.html",
     "title": "R for All of Us",
